@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pandora 2026 — Télécommande</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0d0d0d;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        h2 {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.13em;
+            color: #555;
+            margin-bottom: 12px;
+        }
+
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .app-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.05em;
+        }
+
+        .connection-badge {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 0.75rem;
+            color: #888;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 20px;
+            padding: 5px 12px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #444;
+            flex-shrink: 0;
+            transition: background 0.3s, box-shadow 0.3s;
+        }
+        .dot.connected { background: #4ec9b0; box-shadow: 0 0 6px #4ec9b0; }
+        .dot.error     { background: #f48771; }
+
+        /* Connection panel */
+        .connect-panel {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .connect-panel.visible { display: block; }
+
+        .connect-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .connect-row input {
+            flex: 1;
+            background: #0d0d0d;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #e0e0e0;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            outline: none;
+            min-width: 0;
+        }
+        .connect-row input:focus { border-color: #007acc; }
+
+        .ws-affix {
+            font-size: 0.8rem;
+            color: #444;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .btn-connect {
+            background: #007acc;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .btn-connect:hover { background: #0090ea; }
+
+        /* Section cards */
+        .section {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        /* Button groups */
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-option {
+            flex: 1;
+            min-width: 44px;
+            padding: 12px 8px;
+            background: #252525;
+            border: 2px solid #333;
+            border-radius: 8px;
+            color: #aaa;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: center;
+        }
+        .btn-option:hover { background: #2e2e2e; border-color: #555; color: #ddd; }
+        .btn-option.selected { background: #002244; border-color: #007acc; color: #4fc3f7; }
+
+        .btn-option .sub {
+            display: block;
+            font-size: 0.6rem;
+            font-weight: 400;
+            color: inherit;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+
+        /* Player color buttons */
+        .btn-option[data-players] { position: relative; }
+        .btn-option[data-players].selected { background: #001a33; }
+
+        /* Name inputs */
+        .name-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 9px;
+        }
+        .name-row:last-child { margin-bottom: 0; }
+
+        .name-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .name-input {
+            flex: 1;
+            background: #111;
+            border: 1px solid #2e2e2e;
+            border-radius: 6px;
+            color: #e0e0e0;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .name-input:focus { border-color: #007acc; }
+
+        /* Start / Stop button */
+        .btn-action {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.06em;
+            transition: all 0.15s;
+        }
+        .btn-action.start         { background: #1a7f4e; color: #fff; }
+        .btn-action.start:hover   { background: #1f9960; }
+        .btn-action.stop          { background: #7f1a1a; color: #fff; }
+        .btn-action.stop:hover    { background: #9f2020; }
+        .btn-action:disabled      { background: #252525; color: #444; cursor: not-allowed; }
+
+        /* Timer */
+        .timer-display {
+            text-align: center;
+            font-size: 2.4rem;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            color: #4fc3f7;
+            padding: 8px 0 4px;
+            letter-spacing: 0.04em;
+        }
+        .timer-display.idle    { color: #444; }
+        .timer-display.warning { color: #f48771; }
+
+        .game-state-label {
+            text-align: center;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #555;
+            margin-bottom: 12px;
+        }
+        .game-state-label.playing  { color: #4ec9b0; }
+        .game-state-label.finished { color: #f48771; }
+
+        /* Scores grid */
+        .scores-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .score-card {
+            border-radius: 8px;
+            padding: 10px 8px;
+            text-align: center;
+            display: none;
+            border-top: 3px solid var(--player-color, #333);
+            background: #252525;
+        }
+        .score-card.visible { display: block; }
+
+        .score-card .player-label {
+            font-size: 0.62rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #555;
+            margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .score-card .score-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--player-color, #e0e0e0);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .btn-refresh {
+            background: none;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            color: #555;
+            font-size: 0.75rem;
+            padding: 6px 14px;
+            cursor: pointer;
+            margin-top: 12px;
+            width: 100%;
+            transition: all 0.15s;
+        }
+        .btn-refresh:hover { border-color: #444; color: #999; }
+    </style>
+</head>
+<body>
+
+    <div class="app-header">
+        <div class="app-title">Pandora 2026</div>
+        <div class="connection-badge" id="connBadge">
+            <div class="dot" id="dot"></div>
+            <span id="connLabel">Déconnecté</span>
+        </div>
+    </div>
+
+    <!-- Connexion -->
+    <div class="connect-panel visible" id="connectPanel">
+        <h2>Adresse IP du PC principal</h2>
+        <div class="connect-row">
+            <span class="ws-affix">ws://</span>
+            <input type="text" id="ipAddress" value="localhost" placeholder="192.168.1.x" inputmode="decimal" autocomplete="off" />
+            <span class="ws-affix">:8080</span>
+            <button class="btn-connect" id="btnConnect">Connecter</button>
+        </div>
+    </div>
+
+    <!-- Joueurs -->
+    <div class="section">
+        <h2>Joueurs</h2>
+        <div class="btn-group" id="playerGroup">
+            <button class="btn-option" data-players="1">1</button>
+            <button class="btn-option" data-players="2">2</button>
+            <button class="btn-option" data-players="3">3</button>
+            <button class="btn-option" data-players="4">4</button>
+            <button class="btn-option" data-players="5">5</button>
+            <button class="btn-option" data-players="6">6</button>
+        </div>
+    </div>
+
+    <!-- Noms -->
+    <div class="section" id="namesSection" style="display:none">
+        <h2>Noms des joueurs</h2>
+        <div id="nameInputsContainer"></div>
+    </div>
+
+    <!-- Durée -->
+    <div class="section">
+        <h2>Durée</h2>
+        <div class="btn-group" id="durationGroup">
+            <button class="btn-option" data-duration="10">10<span class="sub">min</span></button>
+            <button class="btn-option" data-duration="20">20<span class="sub">min</span></button>
+            <button class="btn-option" data-duration="30">30<span class="sub">min</span></button>
+        </div>
+    </div>
+
+    <!-- Contrôle -->
+    <div class="section">
+        <div class="game-state-label" id="gameStateLabel">En attente</div>
+        <div class="timer-display idle" id="timerDisplay">--:--</div>
+        <br>
+        <button class="btn-action start" id="btnStart" disabled>DÉMARRER</button>
+    </div>
+
+    <!-- Scores -->
+    <div class="section">
+        <h2>Scores</h2>
+        <div class="scores-grid" id="scoresGrid">
+            <div class="score-card" id="score-1"><div class="player-label" id="slabel-1">Joueur 1</div><div class="score-value" id="sv-1">—</div></div>
+            <div class="score-card" id="score-2"><div class="player-label" id="slabel-2">Joueur 2</div><div class="score-value" id="sv-2">—</div></div>
+            <div class="score-card" id="score-3"><div class="player-label" id="slabel-3">Joueur 3</div><div class="score-value" id="sv-3">—</div></div>
+            <div class="score-card" id="score-4"><div class="player-label" id="slabel-4">Joueur 4</div><div class="score-value" id="sv-4">—</div></div>
+            <div class="score-card" id="score-5"><div class="player-label" id="slabel-5">Joueur 5</div><div class="score-value" id="sv-5">—</div></div>
+            <div class="score-card" id="score-6"><div class="player-label" id="slabel-6">Joueur 6</div><div class="score-value" id="sv-6">—</div></div>
+        </div>
+        <button class="btn-refresh" id="btnScores">↻  Actualiser les scores</button>
+    </div>
+
+    <script>
+        const PLAYER_COLORS = ['#e63946', '#ffc300', '#7ed321', '#00c8e0', '#4361ee', '#e040fb'];
+        const DEFAULT_NAMES = ['Joueur 1', 'Joueur 2', 'Joueur 3', 'Joueur 4', 'Joueur 5', 'Joueur 6'];
+
+        let socket          = null;
+        let selectedPlayers = 0;
+        let selectedDuration= 0;
+        let gameRunning     = false;
+        let timerInterval   = null;
+        let remainingSeconds= 0;
+        let playerNames     = [...DEFAULT_NAMES];
+
+        // Apply player colors to static score cards
+        for (let i = 1; i <= 6; i++) {
+            document.getElementById(`score-${i}`).style.setProperty('--player-color', PLAYER_COLORS[i - 1]);
+        }
+
+        const dot          = document.getElementById('dot');
+        const connLabel    = document.getElementById('connLabel');
+        const connBadge    = document.getElementById('connBadge');
+        const connectPanel = document.getElementById('connectPanel');
+        const btnStart     = document.getElementById('btnStart');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const gameStateLabel = document.getElementById('gameStateLabel');
+
+        // Toggle connect panel
+        connBadge.addEventListener('click', () => connectPanel.classList.toggle('visible'));
+
+        document.getElementById('btnConnect').addEventListener('click', connect);
+        document.getElementById('ipAddress').addEventListener('keydown', e => { if (e.key === 'Enter') connect(); });
+
+        function connect() {
+            if (socket) { socket.close(); socket = null; }
+            const ip   = document.getElementById('ipAddress').value.trim() || 'localhost';
+            const addr = `ws://${ip}:8080`;
+            try { socket = new WebSocket(addr); } catch { setConnState('error'); return; }
+
+            socket.onopen    = () => { setConnState('connected'); connectPanel.classList.remove('visible'); };
+            socket.onmessage = e => { try { handleServerMessage(JSON.parse(e.data)); } catch {} };
+            socket.onclose   = () => { setConnState('disconnected'); stopLocalTimer(); };
+            socket.onerror   = () => setConnState('error');
+        }
+
+        function setConnState(state) {
+            dot.className = 'dot';
+            if (state === 'connected')    { dot.classList.add('connected'); connLabel.textContent = 'Connecté'; }
+            else if (state === 'error')   { dot.classList.add('error');     connLabel.textContent = 'Erreur';   }
+            else                          {                                  connLabel.textContent = 'Déconnecté'; }
+        }
+
+        function send(obj) {
+            if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(obj));
+        }
+
+        // ─── Player selection ─────────────────────────────────────────────────────────
+
+        document.getElementById('playerGroup').addEventListener('click', e => {
+            const btn = e.target.closest('[data-players]');
+            if (!btn) return;
+            selectedPlayers = parseInt(btn.dataset.players);
+            document.querySelectorAll('[data-players]').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            buildNameInputs();
+            updateScoreGrid();
+            checkReady();
+            send({ type: 'set_players', count: selectedPlayers });
+        });
+
+        // ─── Name inputs ──────────────────────────────────────────────────────────────
+
+        function buildNameInputs() {
+            const section   = document.getElementById('namesSection');
+            const container = document.getElementById('nameInputsContainer');
+
+            if (selectedPlayers === 0) { section.style.display = 'none'; return; }
+            section.style.display = 'block';
+            container.innerHTML   = '';
+
+            for (let i = 0; i < selectedPlayers; i++) {
+                const row = document.createElement('div');
+                row.className = 'name-row';
+                row.innerHTML = `
+                    <div class="name-dot" style="background:${PLAYER_COLORS[i]}"></div>
+                    <input class="name-input" type="text"
+                           placeholder="${DEFAULT_NAMES[i]}"
+                           value="${playerNames[i]}"
+                           data-idx="${i}" />
+                `;
+                container.appendChild(row);
+            }
+
+            container.querySelectorAll('.name-input').forEach(input => {
+                input.addEventListener('input', e => {
+                    const idx = parseInt(e.target.dataset.idx);
+                    playerNames[idx] = e.target.value || DEFAULT_NAMES[idx];
+                    updateScoreLabel(idx);
+                    // Trim only in the sent payload, not in the live value
+                    send({ type: 'set_names', names: playerNames.map((n, i) => n.trim() || DEFAULT_NAMES[i]) });
+                });
+            });
+        }
+
+        function updateScoreLabel(idx) {
+            const el = document.getElementById(`slabel-${idx + 1}`);
+            if (el) el.textContent = playerNames[idx];
+        }
+
+        function refreshAllScoreLabels() {
+            for (let i = 0; i < 6; i++) updateScoreLabel(i);
+        }
+
+        // ─── Duration ─────────────────────────────────────────────────────────────────
+
+        document.getElementById('durationGroup').addEventListener('click', e => {
+            const btn = e.target.closest('[data-duration]');
+            if (!btn) return;
+            selectedDuration = parseInt(btn.dataset.duration);
+            document.querySelectorAll('[data-duration]').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            checkReady();
+            send({ type: 'set_duration', minutes: selectedDuration });
+            if (!gameRunning) setTimerDisplay(selectedDuration * 60);
+        });
+
+        function checkReady() {
+            btnStart.disabled = !(selectedPlayers > 0 && selectedDuration > 0);
+        }
+
+        // ─── Start / Stop ─────────────────────────────────────────────────────────────
+
+        btnStart.addEventListener('click', () => {
+            if (!gameRunning) {
+                send({ type: 'start_game' });
+                setGameState('playing');
+            } else {
+                send({ type: 'stop_game' });
+                setGameState('stopped');
+            }
+        });
+
+        document.getElementById('btnScores').addEventListener('click', () => send({ type: 'get_scores' }));
+
+        function setGameState(state) {
+            if (state === 'playing') {
+                gameRunning = true;
+                btnStart.textContent    = 'ARRÊTER';
+                btnStart.className      = 'btn-action stop';
+                gameStateLabel.textContent = 'En cours';
+                gameStateLabel.className   = 'game-state-label playing';
+                startLocalTimer(selectedDuration * 60);
+
+            } else if (state === 'stopped' || state === 'idle') {
+                gameRunning = false;
+                btnStart.textContent    = 'DÉMARRER';
+                btnStart.className      = 'btn-action start';
+                gameStateLabel.textContent = 'En attente';
+                gameStateLabel.className   = 'game-state-label';
+                stopLocalTimer();
+                if (selectedDuration > 0) setTimerDisplay(selectedDuration * 60);
+
+            } else if (state === 'finished') {
+                gameRunning = false;
+                btnStart.textContent    = 'DÉMARRER';
+                btnStart.className      = 'btn-action start';
+                gameStateLabel.textContent = 'Terminé';
+                gameStateLabel.className   = 'game-state-label finished';
+                stopLocalTimer();
+                setTimerDisplay(0);
+                send({ type: 'get_scores' });
+            }
+        }
+
+        // ─── Local timer (mirror of index.html) ───────────────────────────────────────
+
+        function startLocalTimer(seconds) {
+            stopLocalTimer();
+            remainingSeconds = seconds;
+            setTimerDisplay(remainingSeconds);
+            timerInterval = setInterval(() => {
+                remainingSeconds--;
+                if (remainingSeconds <= 0) {
+                    remainingSeconds = 0;
+                    setTimerDisplay(0);
+                    stopLocalTimer();
+                    setGameState('finished');
+                } else {
+                    setTimerDisplay(remainingSeconds);
+                }
+            }, 1000);
+        }
+
+        function stopLocalTimer() {
+            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+        }
+
+        function setTimerDisplay(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            timerDisplay.textContent = `${m}:${s}`;
+            timerDisplay.className = 'timer-display';
+            if (seconds === 0 && !gameRunning)       timerDisplay.classList.add('idle');
+            else if (seconds <= 60 && gameRunning)   timerDisplay.classList.add('warning');
+        }
+
+        // ─── Score grid ───────────────────────────────────────────────────────────────
+
+        function updateScoreGrid() {
+            for (let i = 1; i <= 6; i++) {
+                const card = document.getElementById(`score-${i}`);
+                card.classList.toggle('visible', i <= selectedPlayers);
+            }
+        }
+
+        // ─── Server messages ──────────────────────────────────────────────────────────
+
+        function handleServerMessage(data) {
+
+            if (data.type === 'scores' && Array.isArray(data.scores)) {
+                data.scores.forEach(({ player, score }) => {
+                    const el = document.getElementById(`sv-${player}`);
+                    if (el) el.textContent = score;
+                });
+            }
+
+            if (data.type === 'game_state') {
+                setGameState(data.state);
+                if (data.remaining !== undefined) {
+                    stopLocalTimer();
+                    remainingSeconds = data.remaining;
+                    setTimerDisplay(remainingSeconds);
+                    if (data.state === 'playing') startLocalTimer(remainingSeconds);
+                }
+            }
+
+            if (data.type === 'config') {
+                const prevPlayers = selectedPlayers;
+
+                if (data.players) {
+                    selectedPlayers = data.players;
+                    document.querySelectorAll('[data-players]').forEach(b => {
+                        b.classList.toggle('selected', parseInt(b.dataset.players) === selectedPlayers);
+                    });
+                    // Rebuild inputs only when player count actually changes
+                    if (data.players !== prevPlayers) buildNameInputs();
+                    updateScoreGrid();
+                }
+                if (data.duration) {
+                    selectedDuration = data.duration;
+                    document.querySelectorAll('[data-duration]').forEach(b => {
+                        b.classList.toggle('selected', parseInt(b.dataset.duration) === selectedDuration);
+                    });
+                }
+                if (Array.isArray(data.names)) {
+                    data.names.forEach((name, i) => { if (name) playerNames[i] = name; });
+                    // Never overwrite the input currently being typed in
+                    document.querySelectorAll('.name-input').forEach(input => {
+                        if (input === document.activeElement) return;
+                        const idx = parseInt(input.dataset.idx);
+                        input.value = playerNames[idx] || DEFAULT_NAMES[idx];
+                    });
+                    refreshAllScoreLabels();
+                }
+                checkReady();
+            }
+        }
+
+        // Auto-connect
+        connect();
+    </script>
+</body>
+</html>
