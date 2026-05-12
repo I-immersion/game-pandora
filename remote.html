@@ -1,4 +1,4 @@
-<!-- Pandora 2026 — Remote v1.5.0 -->
+<!-- Pandora 2026 — Remote v1.6.0 -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -487,6 +487,169 @@
         }
         .led-action-btn:hover { background: var(--bg2); }
         .led-action-btn.danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, var(--border2)); }
+
+        /* ─── MANUAL OVERLAY (mode d'emploi) ────────────────────────────── */
+        #manualOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(13, 13, 15, 0.96);
+            display: none;
+            z-index: 200;
+            overflow-y: auto;
+            padding: 30px 40px;
+        }
+        #manualOverlay.visible { display: block; }
+        .manual-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding-bottom: 60px;
+        }
+        .manual-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid var(--border2);
+            position: sticky;
+            top: 0;
+            background: var(--bg);
+            padding-top: 8px;
+            z-index: 1;
+        }
+        .manual-title {
+            font-size: 1.4rem;
+            font-weight: 900;
+            font-style: italic;
+            color: var(--text);
+            letter-spacing: 0.02em;
+        }
+        .manual-title .accent { color: var(--p1); }
+        .manual-close {
+            background: var(--bg3);
+            border: 1px solid var(--border2);
+            color: var(--text);
+            font-size: 0.84rem;
+            padding: 8px 16px;
+            border-radius: var(--radius-xs);
+            cursor: pointer;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .manual-close:hover { background: var(--bg2); }
+
+        .manual-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        @media (max-width: 900px) {
+            .manual-cols { grid-template-columns: 1fr; }
+        }
+        .manual-section {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px 26px;
+        }
+        .manual-section.accueil { border-left: 4px solid var(--p3); }
+        .manual-section.dev     { border-left: 4px solid var(--p4); }
+        .manual-section-tag {
+            font-size: 0.66rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.22em;
+            color: var(--text3);
+            margin-bottom: 6px;
+        }
+        .manual-section.accueil .manual-section-tag { color: var(--p3); }
+        .manual-section.dev     .manual-section-tag { color: var(--p4); }
+        .manual-section h2 {
+            font-size: 1.15rem;
+            font-weight: 900;
+            font-style: italic;
+            color: var(--text);
+            margin-bottom: 18px;
+            letter-spacing: 0.01em;
+        }
+        .manual-section h3 {
+            font-size: 0.85rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--text);
+            margin-top: 22px;
+            margin-bottom: 10px;
+        }
+        .manual-section h3:first-of-type { margin-top: 0; }
+        .manual-section p,
+        .manual-section li {
+            font-size: 0.86rem;
+            line-height: 1.55;
+            color: var(--text2);
+            margin-bottom: 8px;
+        }
+        .manual-section ol,
+        .manual-section ul {
+            padding-left: 22px;
+            margin-bottom: 8px;
+        }
+        .manual-section li::marker { color: var(--text3); }
+        .manual-section strong { color: var(--text); }
+        .manual-section code {
+            font-family: ui-monospace, 'SF Mono', monospace;
+            font-size: 0.78rem;
+            background: var(--bg3);
+            color: var(--p4);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+        .manual-section pre {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xs);
+            padding: 12px 14px;
+            margin: 10px 0;
+            overflow-x: auto;
+            font-family: ui-monospace, 'SF Mono', monospace;
+            font-size: 0.76rem;
+            line-height: 1.45;
+            color: var(--text);
+        }
+        .manual-section pre code {
+            background: transparent;
+            border: none;
+            padding: 0;
+            color: inherit;
+        }
+        .manual-section .callout {
+            background: var(--bg3);
+            border-left: 3px solid var(--warning);
+            padding: 10px 14px;
+            margin: 12px 0;
+            border-radius: var(--radius-xs);
+            font-size: 0.82rem;
+            color: var(--text);
+        }
+        .manual-section .callout strong { color: var(--warning); }
+        .manual-color-chip {
+            display: inline-block;
+            width: 12px; height: 12px;
+            border-radius: 3px;
+            vertical-align: middle;
+            margin-right: 6px;
+            border: 1px solid var(--border2);
+        }
+        .manual-footer {
+            text-align: center;
+            margin-top: 30px;
+            color: var(--text3);
+            font-size: 0.75rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
@@ -496,7 +659,7 @@
     <header>
         <div class="app-title">
             Pandora <span class="accent">2026</span>
-            <span class="version">v1.5.0</span>
+            <span class="version">v1.6.0</span>
         </div>
         <div class="header-right">
             <div class="connection-badge" id="connBadge">
@@ -505,6 +668,7 @@
             </div>
             <button class="header-btn" id="btnQrCodes" title="QR codes joueurs">📱 QR codes</button>
             <button class="header-btn" id="btnLedPanel" title="LED Arduino par joueur">💡 LED</button>
+            <button class="header-btn" id="btnManual" title="Mode d'emploi accueil + technique">📖 Mode d'emploi</button>
             <button class="header-btn" id="btnOscPanel">⚙ Régie OSC</button>
             <button class="header-btn" id="btnFullscreen" title="Plein écran (F)">⛶ Plein écran</button>
         </div>
@@ -615,6 +779,194 @@
         <div class="qr-local-hint">Appuie à nouveau sur « 📱 QR codes » dans le header pour fermer</div>
     </div>
 
+    <div id="manualOverlay">
+        <div class="manual-container">
+            <div class="manual-header">
+                <div class="manual-title">📖 <span class="accent">Pandora 2026</span> — mode d'emploi</div>
+                <button class="manual-close" id="btnManualClose">✕ Fermer</button>
+            </div>
+
+            <div class="manual-cols">
+                <!-- ─── COLONNE ACCUEIL ─────────────────────────── -->
+                <div class="manual-section accueil">
+                    <div class="manual-section-tag">Pour l'équipe accueil</div>
+                    <h2>Démarrer et faire tourner une partie</h2>
+
+                    <h3>1. Lancer Pandora</h3>
+                    <ol>
+                        <li>Double-clic sur <code>Lancer Pandora.command</code> sur le bureau du Mac</li>
+                        <li>Une fenêtre noire (le jeu) s'ouvre en plein écran + un terminal en arrière-plan</li>
+                        <li>Ouvrir la télécommande : c'est cette page actuelle, sur l'iPad ou un PC</li>
+                        <li>Vérifier en haut à droite : pastille verte = <strong>Connecté</strong></li>
+                    </ol>
+                    <div class="callout">
+                        <strong>Pastille rouge ?</strong> Toucher la pastille puis cliquer "Reconnecter". Sinon recharger la page (tirer vers le bas sur tablette, ou Cmd+Shift+R sur Mac).
+                    </div>
+
+                    <h3>2. Configurer la partie</h3>
+                    <ol>
+                        <li><strong>Mode</strong> : Timer (durée fixe) / Course (premier à X points) / Mort subite (jusqu'à la 1ère égalité battue)</li>
+                        <li><strong>Joueurs</strong> : 2 à 6, mettre les noms si possible</li>
+                        <li><strong>Durée / Objectif</strong> selon le mode</li>
+                        <li>Toucher <strong>DÉMARRER</strong> au moment voulu</li>
+                    </ol>
+
+                    <h3>3. Pendant la partie</h3>
+                    <ul>
+                        <li>Les <strong>buzzers physiques</strong> ajoutent les points automatiquement</li>
+                        <li>Faux positif ? Carte du joueur → bouton <strong>↶ Annuler</strong></li>
+                        <li>Pour ajouter un point à la main : bouton <strong>+</strong> sur la carte</li>
+                        <li><strong>STOP</strong> arrête la partie (gagnant désigné), <strong>RESET</strong> remet à zéro</li>
+                    </ul>
+
+                    <h3>4. Implication des joueurs (téléphones)</h3>
+                    <ol>
+                        <li>Toucher <strong>📱 QR codes</strong> → les codes s'affichent en plein écran sur la projection</li>
+                        <li>Chaque joueur scanne son QR et voit son score en direct sur son téléphone</li>
+                        <li>Les joueurs peuvent envoyer des messages flash via 4 boutons (🏎️ GO, ⚠️ VIRAGE, ⚡ BOOST, 🎉 BRAVO) → s'affichent en grand sur la projection</li>
+                    </ol>
+
+                    <h3>5. Messages depuis l'accueil</h3>
+                    <p>Champ <strong>Flash message</strong> en bas de la remote → taper un texte (ex: "Pause technique 5 min") → <strong>Envoyer</strong>. Affiché 5 secondes en orange clignotant sur la projection ET les téléphones joueurs.</p>
+
+                    <h3>6. LED des buzzers</h3>
+                    <p>Les LED RGB sont pilotées automatiquement :</p>
+                    <ul>
+                        <li>Couleurs natives par joueur (orange, jaune, vert, cyan, violet, rouge)</li>
+                        <li>Flash blanc bref quand un joueur marque</li>
+                        <li>La LED du gagnant pulse à la fin</li>
+                    </ul>
+                    <p>Bouton <strong>💡 LED</strong> pour changer manuellement les couleurs ou tout éteindre.</p>
+
+                    <h3>7. En cas de souci</h3>
+                    <ul>
+                        <li><strong>Pandora figé / planté</strong> → fermer la fenêtre + le terminal, relancer le <code>.command</code></li>
+                        <li><strong>Télécommande "Déconnecté"</strong> → recharger la page (Cmd+Shift+R)</li>
+                        <li><strong>Buzzers ne réagissent plus</strong> → vérifier l'alim des Arduino + appeler JB</li>
+                        <li><strong>Téléphones joueurs ne se mettent pas à jour</strong> → vérifier le WiFi du Mac et des téléphones</li>
+                    </ul>
+
+                    <h3>8. Fin de soirée</h3>
+                    <ol>
+                        <li>Fermer la fenêtre Pandora (clic rouge en haut à gauche)</li>
+                        <li>Dans le terminal : <code>Cmd+W</code> pour fermer</li>
+                        <li>Couper les buzzers Arduino</li>
+                    </ol>
+                </div>
+
+                <!-- ─── COLONNE TECHNIQUE / JB ──────────────────── -->
+                <div class="manual-section dev">
+                    <div class="manual-section-tag">Pour JB (technique)</div>
+                    <h2>Architecture et protocoles</h2>
+
+                    <h3>Stack</h3>
+                    <ul>
+                        <li>Electron 28+, node-osc 2.1, ws 8.16, qrcode 1.5.3</li>
+                        <li>Vanilla JS/HTML/CSS, pas de framework, pas de build</li>
+                        <li>3 fichiers source : <code>main.js</code> (Node), <code>index.html</code> (projection), <code>remote.html</code> (télécommande)</li>
+                    </ul>
+
+                    <h3>Ports réseau</h3>
+                    <ul>
+                        <li><strong>OSC IN</strong> : UDP <code>3333</code> — réception des buzzers</li>
+                        <li><strong>OSC OUT</strong> : UDP <code>7000</code> par défaut (config remote → Régie OSC)</li>
+                        <li><strong>WebSocket</strong> : TCP <code>8080</code> — télécommande</li>
+                    </ul>
+
+                    <h3>OSC entrant (depuis Arduino/MaKey)</h3>
+                    <pre><code>/Touch &lt;player_int&gt;     # ajoute 1 point au joueur N (1-6)</code></pre>
+
+                    <h3>OSC sortant (vers Chataigne/QLab/Resolume)</h3>
+                    <pre><code># État de partie
+/pandora/state &lt;string&gt;        # idle|playing|suddendeath|finished|stopped
+/pandora/mode &lt;string&gt;         # timer|race|suddendeath
+/pandora/players &lt;int&gt;         # 2..6
+/pandora/duration &lt;int&gt;        # minutes (timer)
+/pandora/target &lt;int&gt;          # points (race)
+
+# Triggers de jeu
+/pandora/game/started
+/pandora/game/stopped
+/pandora/game/finished
+/pandora/game/reset
+/pandora/suddendeath/enter
+
+# Scores
+/pandora/score/&lt;N&gt;/value &lt;int&gt;
+/pandora/score/&lt;N&gt;/added       # trigger à chaque point
+/pandora/score/&lt;N&gt;/removed     # trigger annulation
+/pandora/leader &lt;int&gt;          # N du leader
+/pandora/winner/&lt;N&gt;            # trigger pour chaque gagnant
+/pandora/winner/count &lt;int&gt;
+
+# Messages
+/pandora/message &lt;string&gt;
+/pandora/message/clear
+
+# LED RGB Arduino (v1.5)
+/setColor &lt;player&gt; &lt;r&gt; &lt;g&gt; &lt;b&gt;  # tous int32, RGB 0-255</code></pre>
+
+                    <h3>Effets LED auto (v1.6)</h3>
+                    <ul>
+                        <li><strong>Flash point</strong> : <code>/setColor N 255 255 255</code> pendant 150ms puis restore</li>
+                        <li><strong>Pulse gagnant</strong> : 6 cycles × 250ms (couleur ↔ 30% intensité)</li>
+                        <li><strong>Blink mort subite</strong> : joueurs à égalité clignotent à 400ms (couleur ↔ éteint)</li>
+                        <li>Override manuel via panel 💡 LED est préservé : les effets restaurent la couleur courante de référence (pas forcément la native)</li>
+                    </ul>
+
+                    <h3>Couleurs natives par joueur</h3>
+                    <ul>
+                        <li><span class="manual-color-chip" style="background:#ff6b35"></span> J1 — <code>#ff6b35</code> — RGB(255, 107, 53)</li>
+                        <li><span class="manual-color-chip" style="background:#fbbf24"></span> J2 — <code>#fbbf24</code> — RGB(251, 191, 36)</li>
+                        <li><span class="manual-color-chip" style="background:#4ade80"></span> J3 — <code>#4ade80</code> — RGB(74, 222, 128)</li>
+                        <li><span class="manual-color-chip" style="background:#00e5ff"></span> J4 — <code>#00e5ff</code> — RGB(0, 229, 255)</li>
+                        <li><span class="manual-color-chip" style="background:#c084fc"></span> J5 — <code>#c084fc</code> — RGB(192, 132, 252)</li>
+                        <li><span class="manual-color-chip" style="background:#f43f5e"></span> J6 — <code>#f43f5e</code> — RGB(244, 63, 94)</li>
+                    </ul>
+
+                    <h3>Firebase RTDB (page joueur)</h3>
+                    <p>Projet <code>lumiia-live</code>, région <code>europe-west1</code></p>
+                    <ul>
+                        <li><code>/pandora/live</code> : état complet pushé toutes 2s pendant timer<br>
+                            { state, mode, players, duration, target, total, remaining, names[], scores[], flash, updatedAt }</li>
+                        <li><code>/pandora/inbox/&lt;auto&gt;</code> : messages joueurs (text, from, at). main.js poll toutes 800ms et flush.</li>
+                    </ul>
+
+                    <h3>Page joueur</h3>
+                    <ul>
+                        <li>URL fixe : <code>https://i-immersion.github.io/pandora-player/?p=N</code></li>
+                        <li>Repo séparé : <code>I-immersion/pandora-player</code> (GitHub Pages)</li>
+                        <li>Firebase Web SDK v10.12 modular, lecture realtime via <code>onValue</code></li>
+                        <li>4 boutons messages → push dans <code>/pandora/inbox</code></li>
+                    </ul>
+
+                    <h3>Logs OSC (debug)</h3>
+                    <p>Le terminal Pandora affiche chaque envoi :</p>
+                    <pre><code>[OSC OUT → 127.0.0.1:7000] /setColor [ 1, 255, 107, 53 ]</code></pre>
+                    <p>Utile pour vérifier ce qui part vraiment côté Mac quand Chataigne ne réagit pas.</p>
+
+                    <h3>Repo Git</h3>
+                    <ul>
+                        <li>Jeu (privé) : <code>github.com/I-immersion/game-pandora</code></li>
+                        <li>Player (public) : <code>github.com/I-immersion/pandora-player</code></li>
+                        <li>Local : <code>~/Dropbox/DB LUMIIA 2025/Outils APP Claude/Game Pandora2026/</code></li>
+                    </ul>
+                    <p>Workflow dev :</p>
+                    <pre><code>cd "~/Dropbox/.../Game Pandora2026"
+git add -A
+git commit -m "vX.Y - description"
+git push</code></pre>
+                    <p><code>node_modules/</code> et <code>pandora-player/</code> sont gitignorés.</p>
+
+                    <h3>Roadmap & notes</h3>
+                    <p>Dans LUMIIA Workspace, projet "Pandora 2026" (24 tâches, 7 notes). Évolution versionée v1.0 → v1.6 actuelle.</p>
+                </div>
+            </div>
+
+            <div class="manual-footer">Pandora 2026 — LUMIIA — v1.6.0</div>
+        </div>
+    </div>
+
     <div id="ledPanel">
         <div class="led-title">💡 LED Arduino — <span class="accent">par joueur</span></div>
         <div id="ledRows"></div>
@@ -646,7 +998,7 @@
     </div>
 
     <script>
-        const VERSION = 'v1.5.0';
+        const VERSION = 'v1.6.0';
         const PLAYER_COLORS = ['#ff6b35', '#fbbf24', '#4ade80', '#00e5ff', '#c084fc', '#f43f5e'];
         const DEFAULT_NAMES = ['Joueur 1', 'Joueur 2', 'Joueur 3', 'Joueur 4', 'Joueur 5', 'Joueur 6'];
 
@@ -828,10 +1180,23 @@
             send({ type: 'clear_leds' });
             setLedPickersToBlack();
         });
+
+        // ─── Manuel / Mode d'emploi ──────────────────────────────────────
+        const manualOverlay = document.getElementById('manualOverlay');
+        document.getElementById('btnManual').addEventListener('click', () => {
+            connectPanel.classList.remove('visible');
+            oscPanel.classList.remove('visible');
+            document.getElementById('ledPanel').classList.remove('visible');
+            manualOverlay.classList.add('visible');
+        });
+        document.getElementById('btnManualClose').addEventListener('click', () => {
+            manualOverlay.classList.remove('visible');
+        });
         document.addEventListener('click', e => {
             if (!e.target.closest('.overlay') && !e.target.closest('#ledPanel') &&
+                !e.target.closest('#manualOverlay') &&
                 !e.target.closest('#connBadge') && !e.target.closest('#btnOscPanel') &&
-                !e.target.closest('#btnLedPanel')) {
+                !e.target.closest('#btnLedPanel') && !e.target.closest('#btnManual')) {
                 connectPanel.classList.remove('visible');
                 oscPanel.classList.remove('visible');
                 document.getElementById('ledPanel').classList.remove('visible');
