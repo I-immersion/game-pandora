@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Pandora 2026</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --c1: #e63946;
+            --c2: #ffc300;
+            --c3: #7ed321;
+            --c4: #00c8e0;
+            --c5: #4361ee;
+            --c6: #e040fb;
+        }
+
+        html, body {
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            background: #080808;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #fff;
+            user-select: none;
+        }
+
+        /* ─── TOP BAR ─── */
+        .topbar {
+            height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 52px;
+            background: #0c0c0c;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .game-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 0.22em;
+            color: #282828;
+            text-transform: uppercase;
+            width: 340px;
+        }
+
+        .timer-wrap { text-align: center; }
+
+        .timer-value {
+            font-size: 5.2rem;
+            font-weight: 900;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+            letter-spacing: 0.04em;
+            color: #e8e8e8;
+            transition: color 0.4s;
+        }
+
+        .timer-value.idle    { color: #222; }
+        .timer-value.warning { color: #f48771; animation: timerPulse 1s ease-in-out infinite; }
+
+        @keyframes timerPulse {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.5; }
+        }
+
+        .game-status {
+            font-size: 0.62rem;
+            text-transform: uppercase;
+            letter-spacing: 0.24em;
+            color: #252525;
+            margin-top: 5px;
+        }
+        .game-status.playing  { color: #4ec9b0; }
+        .game-status.finished { color: #f48771; }
+
+        .topbar-right {
+            text-align: right;
+            font-size: 0.88rem;
+            color: #2e2e2e;
+            width: 340px;
+            letter-spacing: 0.06em;
+        }
+
+        /* ─── PLAYERS AREA ─── */
+        .players-area {
+            display: grid;
+            gap: 14px;
+            padding: 14px;
+            height: 970px;
+        }
+
+        /* Grid layouts */
+        .players-area[data-count="1"] { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+        .players-area[data-count="2"] { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
+        .players-area[data-count="3"] { grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr; }
+        .players-area[data-count="4"] { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
+        /* 5 players: 3 in row 1, 2 centered in row 2 (6-col grid) */
+        .players-area[data-count="5"] { grid-template-columns: repeat(6, 1fr); grid-template-rows: 1fr 1fr; }
+        .players-area[data-count="5"] .player-card:nth-child(1) { grid-column: 1 / 3; grid-row: 1; }
+        .players-area[data-count="5"] .player-card:nth-child(2) { grid-column: 3 / 5; grid-row: 1; }
+        .players-area[data-count="5"] .player-card:nth-child(3) { grid-column: 5 / 7; grid-row: 1; }
+        .players-area[data-count="5"] .player-card:nth-child(4) { grid-column: 2 / 4; grid-row: 2; }
+        .players-area[data-count="5"] .player-card:nth-child(5) { grid-column: 4 / 6; grid-row: 2; }
+        .players-area[data-count="6"] { grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; }
+
+        /* ─── PLAYER CARD ─── */
+        .player-card {
+            background: #0f0f0f;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #161616;
+            transition: border-color 0.4s, box-shadow 0.4s, background 0.4s;
+        }
+
+        .player-card.hidden { display: none; }
+
+        /* Colored top bar */
+        .player-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 8px;
+            background: var(--player-color);
+        }
+
+        /* Score flash on point */
+        .player-card.score-flash { animation: scoreFlash 0.38s ease-out; }
+
+        @keyframes scoreFlash {
+            0%   { background: color-mix(in srgb, var(--player-color) 16%, #0f0f0f); }
+            100% { background: #0f0f0f; }
+        }
+
+        /* Winner highlight */
+        .player-card.winner {
+            border-color: var(--player-color);
+            box-shadow: 0 0 50px color-mix(in srgb, var(--player-color) 30%, transparent),
+                        inset 0 0 40px color-mix(in srgb, var(--player-color) 8%, transparent);
+        }
+
+        .winner-badge {
+            display: none;
+            position: absolute;
+            top: 20px;
+            right: 22px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            color: var(--player-color);
+            text-transform: uppercase;
+        }
+        .player-card.winner .winner-badge { display: block; }
+
+        /* Card content */
+        .player-num {
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.24em;
+            color: var(--player-color);
+            opacity: 0.55;
+            margin-bottom: 10px;
+        }
+
+        .player-name {
+            font-weight: 600;
+            color: #bbb;
+            margin-bottom: 14px;
+            max-width: 88%;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .player-score {
+            font-weight: 900;
+            color: var(--player-color);
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+            text-shadow: 0 0 80px color-mix(in srgb, var(--player-color) 55%, transparent);
+        }
+
+        /* "+1" pop animation */
+        .score-pop {
+            position: absolute;
+            font-size: 3.2rem;
+            font-weight: 900;
+            color: #fff;
+            animation: popUp 0.9s ease-out forwards;
+            pointer-events: none;
+            z-index: 20;
+        }
+        @keyframes popUp {
+            0%   { opacity: 1; transform: translateY(0) scale(1.3); }
+            25%  { opacity: 1; }
+            100% { opacity: 0; transform: translateY(-90px) scale(0.8); }
+        }
+
+        /* ── Font sizes per layout ── */
+        [data-count="1"] .player-score { font-size: 22rem; }
+        [data-count="2"] .player-score { font-size: 18rem; }
+        [data-count="3"] .player-score { font-size: 14rem; }
+        [data-count="4"] .player-score { font-size: 9rem;  }
+        [data-count="5"] .player-score,
+        [data-count="6"] .player-score { font-size: 8rem;  }
+
+        [data-count="1"] .player-name { font-size: 3.4rem; }
+        [data-count="2"] .player-name { font-size: 2.8rem; }
+        [data-count="3"] .player-name { font-size: 2.4rem; }
+        [data-count="4"] .player-name { font-size: 2rem;   }
+        [data-count="5"] .player-name,
+        [data-count="6"] .player-name { font-size: 1.8rem; }
+
+        /* ─── IDLE OVERLAY ─── */
+        #idleOverlay {
+            position: fixed;
+            top: 110px; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.78);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.7s;
+            z-index: 100;
+        }
+        #idleOverlay.visible { opacity: 1; pointer-events: auto; }
+
+        .idle-text {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.22em;
+            color: #222;
+        }
+
+        /* ─── FINISHED BANNER ─── */
+        #finishedBanner {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.6s;
+            z-index: 200;
+        }
+        #finishedBanner.visible { opacity: 1; }
+
+        .finished-text {
+            font-size: 1.6rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.32em;
+            color: #f48771;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="topbar">
+        <div class="game-title">Pandora 2026</div>
+        <div class="timer-wrap">
+            <div class="timer-value idle" id="timerValue">--:--</div>
+            <div class="game-status" id="gameStatus">En attente</div>
+        </div>
+        <div class="topbar-right" id="topbarRight"></div>
+    </div>
+
+    <div class="players-area" id="playersArea" data-count="4"></div>
+
+    <div id="idleOverlay" class="visible">
+        <div class="idle-text">En attente de la télécommande…</div>
+    </div>
+
+    <div id="finishedBanner">
+        <div class="finished-text">Partie terminée</div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        const PLAYER_COLORS  = ['#e63946', '#ffc300', '#7ed321', '#00c8e0', '#4361ee', '#e040fb'];
+        const DEFAULT_NAMES  = ['Joueur 1', 'Joueur 2', 'Joueur 3', 'Joueur 4', 'Joueur 5', 'Joueur 6'];
+
+        const game = {
+            players:   4,
+            duration:  0,
+            names:     [...DEFAULT_NAMES],
+            scores:    [0, 0, 0, 0, 0, 0],
+            state:     'idle',   // idle | playing | finished
+            remaining: 0
+        };
+
+        let timerInterval = null;
+        const playersArea = document.getElementById('playersArea');
+
+        // ─── Build DOM ───────────────────────────────────────────────────────────────
+
+        function buildCards() {
+            playersArea.innerHTML = '';
+            for (let i = 0; i < 6; i++) {
+                const card = document.createElement('div');
+                card.className = 'player-card';
+                card.id = `card-${i + 1}`;
+                card.style.setProperty('--player-color', PLAYER_COLORS[i]);
+                card.innerHTML = `
+                    <div class="winner-badge">Gagnant</div>
+                    <div class="player-num">J${i + 1}</div>
+                    <div class="player-name" id="name-${i + 1}">${game.names[i]}</div>
+                    <div class="player-score" id="score-${i + 1}">0</div>
+                `;
+                playersArea.appendChild(card);
+            }
+            refreshCards();
+        }
+
+        function refreshCards() {
+            playersArea.dataset.count = game.players;
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById(`card-${i}`).classList.toggle('hidden', i > game.players);
+            }
+            const p = game.players;
+            document.getElementById('topbarRight').textContent = p
+                ? `${p} joueur${p > 1 ? 's' : ''}${game.duration ? '  ·  ' + game.duration + ' min' : ''}`
+                : '';
+        }
+
+        function refreshNames() {
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById(`name-${i}`).textContent = game.names[i - 1];
+            }
+        }
+
+        function refreshScore(idx) {
+            document.getElementById(`score-${idx + 1}`).textContent = game.scores[idx];
+        }
+
+        function resetScoreDisplay() {
+            for (let i = 0; i < 6; i++) {
+                document.getElementById(`score-${i + 1}`).textContent = '0';
+            }
+        }
+
+        // ─── Animations ──────────────────────────────────────────────────────────────
+
+        function triggerScoreAnim(idx) {
+            const card = document.getElementById(`card-${idx + 1}`);
+            if (!card) return;
+
+            card.classList.remove('score-flash');
+            void card.offsetWidth;
+            card.classList.add('score-flash');
+
+            const pop = document.createElement('div');
+            pop.className = 'score-pop';
+            pop.textContent = '+1';
+            pop.style.color = PLAYER_COLORS[idx];
+            card.appendChild(pop);
+            setTimeout(() => pop.remove(), 950);
+        }
+
+        // ─── Timer ───────────────────────────────────────────────────────────────────
+
+        function setTimerDisplay(seconds) {
+            const el = document.getElementById('timerValue');
+            if (seconds < 0) seconds = 0;
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            el.textContent = `${m}:${s}`;
+            el.className = 'timer-value';
+            if (game.state === 'idle')                       el.classList.add('idle');
+            else if (game.state === 'playing' && seconds <= 60) el.classList.add('warning');
+        }
+
+        function startTimer() {
+            stopTimer();
+            timerInterval = setInterval(() => {
+                game.remaining--;
+                if (game.remaining <= 0) {
+                    game.remaining = 0;
+                    setTimerDisplay(0);
+                    stopTimer();
+                    applyState('finished');
+                    ipcRenderer.send('send-game-state', { state: 'finished', remaining: 0 });
+                    broadcastScores();
+                } else {
+                    setTimerDisplay(game.remaining);
+                    if (game.remaining % 5 === 0) {
+                        ipcRenderer.send('send-game-state', { state: 'playing', remaining: game.remaining });
+                    }
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+        }
+
+        // ─── Game state ──────────────────────────────────────────────────────────────
+
+        function applyState(newState, remaining) {
+            game.state = newState;
+
+            const statusEl        = document.getElementById('gameStatus');
+            const idleOverlay     = document.getElementById('idleOverlay');
+            const finishedBanner  = document.getElementById('finishedBanner');
+
+            document.querySelectorAll('.player-card').forEach(c => c.classList.remove('winner'));
+            finishedBanner.classList.remove('visible');
+
+            if (newState === 'playing') {
+                statusEl.textContent = 'En cours';
+                statusEl.className   = 'game-status playing';
+                idleOverlay.classList.remove('visible');
+                if (remaining !== undefined) game.remaining = remaining;
+                setTimerDisplay(game.remaining);
+                startTimer();
+
+            } else if (newState === 'idle' || newState === 'stopped') {
+                statusEl.textContent = 'En attente';
+                statusEl.className   = 'game-status';
+                idleOverlay.classList.add('visible');
+                stopTimer();
+                if (game.duration > 0) setTimerDisplay(game.duration * 60);
+                else {
+                    document.getElementById('timerValue').textContent = '--:--';
+                    document.getElementById('timerValue').className   = 'timer-value idle';
+                }
+
+            } else if (newState === 'finished') {
+                statusEl.textContent = 'Terminé';
+                statusEl.className   = 'game-status finished';
+                idleOverlay.classList.remove('visible');
+                finishedBanner.classList.add('visible');
+                stopTimer();
+                setTimerDisplay(0);
+
+                const active   = game.scores.slice(0, game.players);
+                const maxScore = Math.max(...active);
+                if (maxScore > 0) {
+                    active.forEach((score, i) => {
+                        if (score === maxScore) document.getElementById(`card-${i + 1}`).classList.add('winner');
+                    });
+                }
+            }
+        }
+
+        // ─── Broadcast ───────────────────────────────────────────────────────────────
+
+        function broadcastScores() {
+            ipcRenderer.send('send-scores', game.scores.slice(0, game.players).map((score, i) => ({
+                player: i + 1, score
+            })));
+        }
+
+        function broadcastAll() {
+            ipcRenderer.send('send-config', {
+                players:  game.players,
+                duration: game.duration,
+                names:    game.names
+            });
+            ipcRenderer.send('send-game-state', { state: game.state, remaining: game.remaining });
+            broadcastScores();
+        }
+
+        // ─── IPC handlers ────────────────────────────────────────────────────────────
+
+        ipcRenderer.on('remote-command', (event, data) => {
+            switch (data.type) {
+
+                case 'set_players':
+                    game.players = data.count;
+                    refreshCards();
+                    ipcRenderer.send('send-config', { players: game.players, duration: game.duration, names: game.names });
+                    break;
+
+                case 'set_duration':
+                    game.duration  = data.minutes;
+                    game.remaining = data.minutes * 60;
+                    refreshCards();
+                    if (game.state !== 'playing') setTimerDisplay(game.remaining);
+                    ipcRenderer.send('send-config', { players: game.players, duration: game.duration, names: game.names });
+                    break;
+
+                case 'set_names':
+                    if (Array.isArray(data.names)) {
+                        data.names.forEach((n, i) => { game.names[i] = n || DEFAULT_NAMES[i]; });
+                    }
+                    refreshNames();
+                    ipcRenderer.send('send-config', { players: game.players, duration: game.duration, names: game.names });
+                    break;
+
+                case 'start_game':
+                    game.scores    = [0, 0, 0, 0, 0, 0];
+                    game.remaining = game.duration * 60;
+                    resetScoreDisplay();
+                    applyState('playing', game.remaining);
+                    ipcRenderer.send('send-game-state', { state: 'playing', remaining: game.remaining });
+                    break;
+
+                case 'stop_game':
+                    applyState('stopped');
+                    ipcRenderer.send('send-game-state', { state: 'stopped', remaining: game.remaining });
+                    break;
+
+                case 'get_scores':
+                    broadcastScores();
+                    break;
+            }
+        });
+
+        // OSC /Touch + player number (1-based)
+        ipcRenderer.on('osc-message', (event, data) => {
+            if (data.address === '/Touch' && Array.isArray(data.args) && data.args.length > 0) {
+                const p = parseInt(data.args[0]);
+                if (p >= 1 && p <= game.players && game.state === 'playing') {
+                    game.scores[p - 1]++;
+                    refreshScore(p - 1);
+                    triggerScoreAnim(p - 1);
+                    broadcastScores();
+                }
+            }
+        });
+
+        // Sync state to any freshly connected remote
+        ipcRenderer.on('ws-client-event', (event, data) => {
+            if (data.connected) broadcastAll();
+        });
+
+        // ─── Init ────────────────────────────────────────────────────────────────────
+        buildCards();
+        applyState('idle');
+    </script>
+</body>
+</html>
