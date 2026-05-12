@@ -38,9 +38,15 @@ function rebuildOscClient() {
 }
 
 function sendOscOut(address, ...args) {
-  if (!oscClient) return;
-  try { oscClient.send(address, ...args); }
-  catch (e) { console.error('OSC send failed:', e.message); }
+  if (!oscClient) {
+    console.warn('[OSC OUT] client non initialisé, skipped:', address);
+    return;
+  }
+  try {
+    oscClient.send(address, ...args);
+    console.log(`[OSC OUT → ${oscOutHost}:${oscOutPort}] ${address}`, args.length ? args : '(no args)');
+  }
+  catch (e) { console.error('[OSC OUT] send failed:', e.message); }
 }
 
 // ─── FIREBASE PUSH (state → /pandora/live) ───────────────────────────────

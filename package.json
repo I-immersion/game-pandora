@@ -1,6 +1,6 @@
 {
   "name": "pandora-2026",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Pandora 2026 — Scoring temps réel pour jeu d'animation à buzzers physiques",
   "main": "main.js",
   "author": "Emmanuel Exbrayat / LUMIIA",

@@ -1,4 +1,4 @@
-<!-- Pandora 2026 — Projection v1.5.0 -->
+<!-- Pandora 2026 — Projection v1.6.0 -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -478,7 +478,7 @@
     <div class="topbar">
         <div class="game-title">
             Pandora <span class="accent">2026</span>
-            <span class="version-tag">v1.5.0</span>
+            <span class="version-tag">v1.6.0</span>
         </div>
         <div class="timer-wrap">
             <div class="timer-value idle" id="timerValue">--:--</div>
@@ -515,7 +515,7 @@
     </div>
 
     <script>
-        const VERSION = 'v1.5.0';
+        const VERSION = 'v1.6.0';
         const { ipcRenderer } = require('electron');
 
         const PLAYER_COLORS = ['#ff6b35', '#fbbf24', '#4ade80', '#00e5ff', '#c084fc', '#f43f5e'];
@@ -531,13 +531,43 @@
         }
         const PLAYER_RGB = PLAYER_COLORS.map(hexToRgb);
 
-        function sendLedColor(player, r, g, b) {
+        // currentLedColors = ce qui DOIT être affiché normalement (sans effet temporaire)
+        // Initialisé aux couleurs natives, modifié par sendLedColor() quand persistant
+        let currentLedColors = PLAYER_RGB.map(c => ({ ...c }));
+
+        // Effets en cours
+        let suddenDeathBlinkInterval = null;
+        let winnerPulseIntervals = [];
+        let flashTimeouts = [null, null, null, null, null, null];
+
+        function emitOscColor(player, r, g, b) {
             ipcRenderer.send('osc-out', {
                 address: '/setColor',
                 args: [Math.floor(player), Math.floor(r), Math.floor(g), Math.floor(b)]
             });
         }
+
+        // Envoi persistant (met à jour la couleur courante de référence)
+        function sendLedColor(player, r, g, b) {
+            if (player >= 1 && player <= 6) {
+                currentLedColors[player - 1] = { r, g, b };
+            }
+            emitOscColor(player, r, g, b);
+        }
+
+        // Envoi transitoire (sans toucher currentLedColors) — pour effets
+        function emitTransient(player, r, g, b) {
+            emitOscColor(player, r, g, b);
+        }
+
+        function restoreLedColor(player) {
+            if (player < 1 || player > 6) return;
+            const { r, g, b } = currentLedColors[player - 1];
+            emitOscColor(player, r, g, b);
+        }
+
         function sendNativeLedColors() {
+            stopAllLedEffects();
             for (let i = 1; i <= 6; i++) {
                 if (i <= game.players) {
                     const { r, g, b } = PLAYER_RGB[i - 1];
@@ -548,7 +578,76 @@
             }
         }
         function clearAllLeds() {
+            stopAllLedEffects();
             for (let i = 1; i <= 6; i++) sendLedColor(i, 0, 0, 0);
+        }
+
+        // ─── EFFETS LED ──────────────────────────────────────────────────────
+
+        // Flash blanc bref puis retour à la couleur courante
+        function flashLedWhite(player, durationMs = 150) {
+            if (player < 1 || player > 6) return;
+            if (flashTimeouts[player - 1]) clearTimeout(flashTimeouts[player - 1]);
+            emitTransient(player, 255, 255, 255);
+            flashTimeouts[player - 1] = setTimeout(() => {
+                flashTimeouts[player - 1] = null;
+                // Ne restore que s'il n'y a pas d'effet plus prioritaire en cours
+                if (!suddenDeathBlinkInterval) restoreLedColor(player);
+            }, durationMs);
+        }
+
+        // Pulse couleur pleine ↔ 30% intensité — pour le gagnant à la fin
+        function pulseLedWinner(player, cycles = 6, intervalMs = 250) {
+            if (player < 1 || player > 6) return;
+            const { r, g, b } = currentLedColors[player - 1];
+            let step = 0;
+            const totalSteps = cycles * 2;
+            const id = setInterval(() => {
+                if (step >= totalSteps) {
+                    clearInterval(id);
+                    winnerPulseIntervals = winnerPulseIntervals.filter(i => i !== id);
+                    restoreLedColor(player);
+                    return;
+                }
+                const factor = step % 2 === 0 ? 1.0 : 0.3;
+                emitTransient(player, r * factor, g * factor, b * factor);
+                step++;
+            }, intervalMs);
+            winnerPulseIntervals.push(id);
+        }
+
+        // Clignotement couleur ↔ éteint pour la mort subite
+        function startSuddenDeathBlink(players) {
+            stopSuddenDeathBlink();
+            if (!players || players.length === 0) return;
+            let on = true;
+            suddenDeathBlinkInterval = setInterval(() => {
+                players.forEach(p => {
+                    if (p < 1 || p > 6) return;
+                    if (on) {
+                        const { r, g, b } = currentLedColors[p - 1];
+                        emitTransient(p, r, g, b);
+                    } else {
+                        emitTransient(p, 0, 0, 0);
+                    }
+                });
+                on = !on;
+            }, 400);
+        }
+        function stopSuddenDeathBlink() {
+            if (suddenDeathBlinkInterval) {
+                clearInterval(suddenDeathBlinkInterval);
+                suddenDeathBlinkInterval = null;
+                // Restore current colors on all 6
+                for (let i = 1; i <= 6; i++) restoreLedColor(i);
+            }
+        }
+
+        function stopAllLedEffects() {
+            stopSuddenDeathBlink();
+            winnerPulseIntervals.forEach(id => clearInterval(id));
+            winnerPulseIntervals = [];
+            flashTimeouts.forEach((t, i) => { if (t) clearTimeout(t); flashTimeouts[i] = null; });
         }
 
         const game = {
@@ -750,6 +849,8 @@
             });
             winners.forEach(p => oscOut(`/pandora/winner/${p}`));
             oscOutScalar('/pandora/winner/count', winners.length);
+            // LED pulse pour le(s) gagnant(s)
+            winners.forEach(p => pulseLedWinner(p, 6, 250));
         }
 
         function setSuddenDeathFrame(on) {
@@ -757,6 +858,19 @@
                 if (i < game.players) c.classList.toggle('suddendeath-frame', on);
                 else c.classList.remove('suddendeath-frame');
             });
+            // LED : clignote uniquement les joueurs à égalité (les leaders)
+            if (on) {
+                const active = game.scores.slice(0, game.players);
+                const maxScore = Math.max(...active);
+                if (maxScore > 0) {
+                    const tied = active
+                        .map((s, i) => s === maxScore ? i + 1 : null)
+                        .filter(Boolean);
+                    startSuddenDeathBlink(tied);
+                }
+            } else {
+                stopSuddenDeathBlink();
+            }
         }
 
         // ─── Flash message ───────────────────────────────────────────────────
@@ -879,6 +993,12 @@
             const prevState = game.state;
             game.state = newState;
 
+            // Stop pulse/flash quand on transitionne vers playing/idle/stopped
+            // (sinon ils continueraient à tourner après reset)
+            if (newState === 'playing' || newState === 'idle' || newState === 'stopped') {
+                stopAllLedEffects();
+            }
+
             const statusEl       = document.getElementById('gameStatus');
             const idleOverlay    = document.getElementById('idleOverlay');
             const finishedBanner = document.getElementById('finishedBanner');
@@ -963,6 +1083,7 @@
             refreshScore(idx);
             triggerScoreAnim(idx, '+1');
             playTick(idx);
+            flashLedWhite(idx + 1);
             broadcastScores();
             updateLeading();
             pushFirebase();
@@ -1105,6 +1226,7 @@
                     for (let i = 1; i <= game.players; i++) oscOutScalar(`/pandora/score/${i}/value`, 0);
                     oscOut('/pandora/game/reset');
                     applyState('idle');
+                    sendNativeLedColors();
                     broadcastScores();
                     break;
 
