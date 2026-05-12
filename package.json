@@ -1,16 +1,17 @@
 {
-  "name": "electron-osc-bridge",
-  "version": "1.0.0",
-  "description": "Bridge entre OSC et WebSockets via Electron",
+  "name": "pandora-2026",
+  "version": "1.5.0",
+  "description": "Pandora 2026 — Scoring temps réel pour jeu d'animation à buzzers physiques",
   "main": "main.js",
-  "author": "Votre Nom",
+  "author": "Emmanuel Exbrayat / LUMIIA",
   "license": "MIT",
   "scripts": {
     "start": "electron ."
   },
   "dependencies": {
     "node-osc": "^2.1.0",
-    "ws": "^8.16.0"
+    "qrcode":   "^1.5.3",
+    "ws":       "^8.16.0"
   },
   "devDependencies": {
     "electron": "^28.0.0"

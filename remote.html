@@ -1,385 +1,868 @@
+<!-- Pandora 2026 — Remote v1.5.0 -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=1920, initial-scale=1.0, user-scalable=no">
     <title>Pandora 2026 — Télécommande</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        body {
+        :root {
+            --bg: #0d0d0f; --bg2: #141417; --bg3: #1c1c21;
+            --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.12);
+            --text: #f0f0f2; --text2: #888890; --text3: #555560;
+            --p1: #ff6b35; --p2: #fbbf24; --p3: #4ade80;
+            --p4: #00e5ff; --p5: #c084fc; --p6: #f43f5e;
+            --playing: #4ade80; --warning: #fbbf24; --danger: #f43f5e; --info: #00e5ff;
+            --radius: 16px; --radius-sm: 10px; --radius-xs: 6px;
+        }
+
+        html, body {
+            width: 100vw; height: 100vh;
+            overflow: hidden;
+            background: var(--bg); color: var(--text);
             font-family: 'Segoe UI', system-ui, sans-serif;
-            background: #0d0d0d;
-            color: #e0e0e0;
-            min-height: 100vh;
-            padding: 20px;
+            user-select: none;
+        }
+        body { display: flex; flex-direction: column; }
+        body::before {
+            content: ''; position: fixed; inset: 0;
+            background-image: repeating-linear-gradient(-45deg, transparent 0 40px, rgba(255,255,255,0.012) 40px 80px);
+            pointer-events: none; z-index: 0;
         }
 
         h2 {
-            font-size: 0.72rem;
-            text-transform: uppercase;
-            letter-spacing: 0.13em;
-            color: #555;
-            margin-bottom: 12px;
+            font-size: 0.74rem; text-transform: uppercase;
+            letter-spacing: 0.14em; color: var(--text2);
+            margin-bottom: 10px;
         }
 
-        .app-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 24px;
+        header {
+            height: 64px; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 28px; background: var(--bg2);
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0; position: relative; z-index: 2;
         }
-
-        .app-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #fff;
-            letter-spacing: 0.05em;
+        .app-title { font-size: 1.3rem; font-weight: 800; letter-spacing: 0.06em; }
+        .app-title .accent { color: var(--p1); }
+        .app-title .version {
+            font-size: 0.72rem; color: var(--text3);
+            letter-spacing: 0.18em; margin-left: 10px;
+            font-weight: 500; opacity: 0.7;
         }
+        .header-right { display: flex; align-items: center; gap: 10px; }
 
         .connection-badge {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            font-size: 0.75rem;
-            color: #888;
-            background: #1a1a1a;
-            border: 1px solid #2a2a2a;
-            border-radius: 20px;
-            padding: 5px 12px;
-            cursor: pointer;
-            user-select: none;
+            display: flex; align-items: center; gap: 8px;
+            font-size: 0.85rem; color: var(--text2);
+            background: var(--bg3); border: 1px solid var(--border);
+            border-radius: 20px; padding: 6px 14px; cursor: pointer;
         }
-
         .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #444;
-            flex-shrink: 0;
+            width: 9px; height: 9px; border-radius: 50%;
+            background: var(--text3);
             transition: background 0.3s, box-shadow 0.3s;
         }
-        .dot.connected { background: #4ec9b0; box-shadow: 0 0 6px #4ec9b0; }
-        .dot.error     { background: #f48771; }
+        .dot.connected { background: var(--playing); box-shadow: 0 0 8px var(--playing); }
+        .dot.error     { background: var(--danger); }
 
-        /* Connection panel */
-        .connect-panel {
-            background: #1a1a1a;
-            border: 1px solid #2a2a2a;
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 20px;
-            display: none;
+        .header-btn {
+            font-size: 0.78rem; color: var(--text2);
+            background: var(--bg3); border: 1px solid var(--border);
+            border-radius: var(--radius-xs); padding: 6px 14px;
+            cursor: pointer; letter-spacing: 0.08em; text-transform: uppercase;
         }
-        .connect-panel.visible { display: block; }
+        .header-btn:hover { background: var(--bg2); color: var(--text); }
+        .header-btn.active { background: var(--p1); color: var(--bg); border-color: var(--p1); }
 
-        .connect-row {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        .connect-row input {
-            flex: 1;
-            background: #0d0d0d;
-            border: 1px solid #333;
-            border-radius: 6px;
-            color: #e0e0e0;
-            padding: 8px 12px;
-            font-size: 0.9rem;
-            outline: none;
-            min-width: 0;
-        }
-        .connect-row input:focus { border-color: #007acc; }
-
-        .ws-affix {
-            font-size: 0.8rem;
-            color: #444;
-            white-space: nowrap;
-            flex-shrink: 0;
+        .checkered-bar {
+            height: 6px; flex-shrink: 0;
+            background: repeating-linear-gradient(90deg, var(--text) 0 12px, var(--bg) 12px 24px);
+            opacity: 0.10;
         }
 
-        .btn-connect {
-            background: #007acc;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            padding: 8px 16px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            font-weight: 600;
-            white-space: nowrap;
+        main {
+            flex: 1; display: grid;
+            grid-template-columns: 520px 1fr 720px;
+            gap: 14px; padding: 14px;
+            min-height: 0; position: relative; z-index: 1;
         }
-        .btn-connect:hover { background: #0090ea; }
-
-        /* Section cards */
-        .section {
-            background: #1a1a1a;
-            border: 1px solid #2a2a2a;
-            border-radius: 10px;
-            padding: 16px;
-            margin-bottom: 16px;
+        .col {
+            background: var(--bg2); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 16px;
+            display: flex; flex-direction: column; gap: 12px;
+            min-height: 0; overflow: hidden;
+        }
+        .col-center {
+            background: transparent; border: none; padding: 0;
+            justify-content: space-between; align-items: center; gap: 14px;
         }
 
-        /* Button groups */
-        .btn-group {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
+        .btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
         .btn-option {
-            flex: 1;
-            min-width: 44px;
-            padding: 12px 8px;
-            background: #252525;
-            border: 2px solid #333;
-            border-radius: 8px;
-            color: #aaa;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.15s;
+            flex: 1; min-width: 0;
+            padding: 9px 4px;
+            background: var(--bg3);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xs);
+            color: var(--text2);
+            font-size: 0.95rem; font-weight: 600;
+            cursor: pointer; transition: all 0.15s;
             text-align: center;
         }
-        .btn-option:hover { background: #2e2e2e; border-color: #555; color: #ddd; }
-        .btn-option.selected { background: #002244; border-color: #007acc; color: #4fc3f7; }
-
+        .btn-option:hover { background: var(--bg2); border-color: var(--border2); color: var(--text); }
+        .btn-option.selected {
+            background: color-mix(in srgb, var(--info) 14%, var(--bg3));
+            border-color: var(--info);
+            color: var(--info);
+        }
         .btn-option .sub {
-            display: block;
-            font-size: 0.6rem;
-            font-weight: 400;
-            color: inherit;
-            opacity: 0.7;
-            margin-top: 2px;
+            display: block; font-size: 0.55rem;
+            font-weight: 400; color: inherit; opacity: 0.7;
+            margin-top: 2px; letter-spacing: 0.08em; text-transform: uppercase;
+        }
+        .btn-mode.selected[data-mode="timer"]       { background: color-mix(in srgb, var(--info) 14%, var(--bg3));    border-color: var(--info);    color: var(--info); }
+        .btn-mode.selected[data-mode="race"]        { background: color-mix(in srgb, var(--playing) 14%, var(--bg3)); border-color: var(--playing); color: var(--playing); }
+        .btn-mode.selected[data-mode="suddendeath"] { background: color-mix(in srgb, var(--warning) 14%, var(--bg3)); border-color: var(--warning); color: var(--warning); }
+
+        .names-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+        .name-row {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--bg3); padding: 6px 8px;
+            border-radius: var(--radius-xs); border: 1px solid var(--border);
+        }
+        .name-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .name-input {
+            flex: 1; background: transparent; border: none;
+            color: var(--text); font-size: 0.92rem;
+            outline: none; min-width: 0; padding: 2px;
+        }
+        .name-input::placeholder { color: var(--text3); }
+
+        .ring-wrap {
+            position: relative; width: 400px; height: 400px;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .ring-svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+        .ring-bg { fill: none; stroke: var(--bg2); stroke-width: 24; }
+        .ring-fg {
+            fill: none; stroke: var(--info); stroke-width: 24;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.9s linear, stroke 0.4s;
+        }
+        .ring-fg.warning { stroke: var(--warning); }
+        .ring-fg.danger  { stroke: var(--danger); }
+        .ring-fg.playing { stroke: var(--playing); }
+
+        .ring-center { position: relative; text-align: center; z-index: 1; }
+        .ring-time {
+            font-size: 5rem; font-weight: 900; font-style: italic;
+            font-variant-numeric: tabular-nums; line-height: 1;
+            color: var(--text); letter-spacing: 0.02em;
+        }
+        .ring-time.idle    { color: var(--text3); }
+        .ring-time.warning { color: var(--warning); }
+        .ring-time.danger  { color: var(--danger); animation: pulse 0.6s ease-in-out infinite; }
+        .ring-state {
+            margin-top: 8px; font-size: 0.78rem;
+            text-transform: uppercase; letter-spacing: 0.22em;
+            color: var(--text3);
+        }
+        .ring-state.playing      { color: var(--playing); }
+        .ring-state.finished     { color: var(--danger); }
+        .ring-state.suddendeath  { color: var(--warning); animation: pulse 1s ease-in-out infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.5; }
         }
 
-        /* Player color buttons */
-        .btn-option[data-players] { position: relative; }
-        .btn-option[data-players].selected { background: #001a33; }
+        .action-buttons {
+            display: flex; flex-direction: column; gap: 8px; width: 400px;
+        }
+        .btn-action {
+            width: 100%; padding: 16px; border: none;
+            border-radius: var(--radius-sm);
+            font-size: 1.1rem; font-weight: 800;
+            cursor: pointer; letter-spacing: 0.12em;
+            transition: all 0.15s; text-transform: uppercase;
+        }
+        .btn-action.start       { background: var(--playing); color: var(--bg); }
+        .btn-action.start:hover { filter: brightness(1.1); }
+        .btn-action.stop        { background: var(--danger);  color: var(--text); }
+        .btn-action.stop:hover  { filter: brightness(1.1); }
+        .btn-action:disabled    { background: var(--bg3); color: var(--text3); cursor: not-allowed; }
 
-        /* Name inputs */
-        .name-row {
+        .btn-reset {
+            width: 100%; padding: 8px;
+            background: transparent; border: 1px solid var(--border2);
+            border-radius: var(--radius-xs); color: var(--text2);
+            font-size: 0.78rem; font-weight: 600; cursor: pointer;
+            letter-spacing: 0.1em; text-transform: uppercase;
+        }
+        .btn-reset:hover { background: var(--bg3); color: var(--text); }
+
+        .flash-section {
+            width: 400px; background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 12px;
+        }
+        .flash-row { display: flex; gap: 8px; align-items: center; }
+        .flash-input {
+            flex: 1; background: var(--bg); border: 1px solid var(--border2);
+            border-radius: var(--radius-xs); color: var(--text);
+            padding: 9px 12px; font-size: 0.92rem;
+            outline: none; min-width: 0;
+        }
+        .flash-input:focus { border-color: var(--p1); }
+        .flash-send {
+            background: var(--p1); color: var(--bg); border: none;
+            border-radius: var(--radius-xs); padding: 9px 14px;
+            font-size: 0.78rem; font-weight: 800; cursor: pointer;
+            letter-spacing: 0.08em; text-transform: uppercase; white-space: nowrap;
+        }
+        .flash-send:hover  { filter: brightness(1.1); }
+        .flash-send:disabled { background: var(--bg3); color: var(--text3); cursor: not-allowed; }
+
+        .scores-grid {
+            display: grid; grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr; gap: 10px;
+            flex: 1; min-height: 0;
+        }
+        .score-card {
+            background: var(--bg3); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); padding: 14px;
+            display: none; position: relative;
+            border-left: 5px solid var(--player-color, var(--text3));
+            min-height: 0;
+        }
+        .score-card.visible { display: flex; flex-direction: column; justify-content: space-between; }
+        .score-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .player-label {
+            font-size: 0.9rem; color: var(--text2); font-weight: 600;
+            max-width: calc(100% - 38px); overflow: hidden;
+            text-overflow: ellipsis; white-space: nowrap;
+        }
+        .btn-undo {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: transparent; border: 1px solid var(--border2);
+            color: var(--text3); font-size: 1.2rem; font-weight: 700;
+            line-height: 1; cursor: pointer; flex-shrink: 0;
+            transition: all 0.15s;
+        }
+        .btn-undo:hover  { border-color: var(--danger); color: var(--danger); }
+        .btn-undo:active { background: var(--danger); color: var(--bg); }
+        .btn-undo:disabled { opacity: 0.3; cursor: not-allowed; }
+        .score-value {
+            font-size: 4.4rem; font-weight: 900; font-style: italic;
+            color: var(--player-color, var(--text));
+            font-variant-numeric: tabular-nums; line-height: 1;
+            text-align: center; margin: auto 0;
+        }
+
+        .overlay {
+            position: fixed; top: 70px; right: 14px;
+            background: var(--bg2); border: 1px solid var(--border2);
+            border-radius: var(--radius); padding: 18px;
+            min-width: 380px; box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+            display: none; z-index: 100;
+        }
+        .overlay.visible { display: block; }
+        .overlay-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+        .overlay-row:last-child { margin-bottom: 0; }
+        .overlay-row label {
+            font-size: 0.7rem; color: var(--text2);
+            text-transform: uppercase; letter-spacing: 0.1em; min-width: 50px;
+        }
+        .overlay-row input {
+            flex: 1; background: var(--bg); border: 1px solid var(--border2);
+            border-radius: var(--radius-xs); color: var(--text);
+            padding: 8px 12px; font-size: 0.92rem;
+            outline: none; min-width: 0;
+        }
+        .overlay-row input:focus { border-color: var(--info); }
+        .ws-affix { font-size: 0.8rem; color: var(--text3); white-space: nowrap; }
+        .btn-apply {
+            background: var(--info); color: var(--bg); border: none;
+            border-radius: var(--radius-xs); padding: 8px 16px;
+            font-size: 0.85rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+        }
+        .osc-doc {
+            margin-top: 14px; padding-top: 12px;
+            border-top: 1px solid var(--border);
+            font-size: 0.7rem; color: var(--text3);
+            line-height: 1.6; font-family: ui-monospace, monospace;
+        }
+
+        .hidden { display: none !important; }
+
+        #portraitWarn {
+            display: none; position: fixed; inset: 0;
+            background: var(--bg); z-index: 999;
+            align-items: center; justify-content: center;
+            font-size: 1.2rem; color: var(--text2);
+            text-align: center; padding: 40px;
+        }
+        @media (orientation: portrait) and (max-width: 900px) {
+            #portraitWarn { display: flex; }
+        }
+
+        /* ─── QR LOCAL OVERLAY (sur la remote elle-même) ─────────────────── */
+        #qrLocalOverlay {
+            position: fixed;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 400;
+            background: rgba(13, 13, 15, 0.97);
+            padding: 30px;
+        }
+        #qrLocalOverlay.visible { display: flex; }
+        .qr-local-title {
+            font-size: 2rem;
+            font-weight: 900;
+            font-style: italic;
+            color: var(--text);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .qr-local-title .accent { color: var(--p1); }
+        .qr-local-subtitle {
+            font-size: 0.85rem;
+            color: var(--text2);
+            margin-bottom: 22px;
+            letter-spacing: 0.04em;
+        }
+        .qr-local-subtitle .url {
+            font-family: ui-monospace, monospace;
+            color: var(--p1);
+            font-weight: 700;
+        }
+        .qr-local-grid {
+            display: grid;
+            gap: 16px;
+        }
+        .qr-local-grid[data-count="1"] { grid-template-columns: 1fr; }
+        .qr-local-grid[data-count="2"] { grid-template-columns: 1fr 1fr; }
+        .qr-local-grid[data-count="3"] { grid-template-columns: 1fr 1fr 1fr; }
+        .qr-local-grid[data-count="4"] { grid-template-columns: 1fr 1fr 1fr 1fr; }
+        .qr-local-grid[data-count="5"] { grid-template-columns: repeat(5, 1fr); }
+        .qr-local-grid[data-count="6"] { grid-template-columns: repeat(6, 1fr); }
+        .qr-local-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px;
+            text-align: center;
+            border-top: 5px solid var(--player-color);
+        }
+        .qr-local-card img {
+            width: 100%;
+            max-width: 220px;
+            height: auto;
+            display: block;
+            margin: 0 auto 8px;
+            border-radius: 6px;
+        }
+        .qr-local-name {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: var(--player-color);
+            font-style: italic;
+            margin-bottom: 2px;
+        }
+        .qr-local-id {
+            font-size: 0.6rem;
+            color: var(--text3);
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+        .qr-local-hint {
+            margin-top: 22px;
+            font-size: 0.7rem;
+            color: var(--text3);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            text-align: center;
+        }
+        .qr-local-close {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            background: var(--bg2);
+            border: 1px solid var(--border2);
+            color: var(--text);
+            border-radius: var(--radius-xs);
+            padding: 8px 14px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .qr-local-close:hover { background: var(--bg3); }
+
+        /* ─── LED OVERLAY (color picker par joueur) ───────────────────────── */
+        #ledPanel {
+            position: fixed;
+            top: 70px; right: 14px;
+            background: var(--bg2);
+            border: 1px solid var(--border2);
+            border-radius: var(--radius);
+            padding: 18px;
+            min-width: 440px;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+            display: none;
+            z-index: 100;
+        }
+        #ledPanel.visible { display: block; }
+        .led-title {
+            font-size: 0.74rem;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: var(--text2);
+            margin-bottom: 12px;
+        }
+        .led-title .accent { color: var(--p1); }
+        .led-row {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 9px;
+            gap: 12px;
+            background: var(--bg3);
+            padding: 8px 10px;
+            margin-bottom: 6px;
+            border-radius: var(--radius-xs);
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--player-color);
         }
-        .name-row:last-child { margin-bottom: 0; }
-
-        .name-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .name-input {
+        .led-row .led-name {
             flex: 1;
-            background: #111;
-            border: 1px solid #2e2e2e;
-            border-radius: 6px;
-            color: #e0e0e0;
-            padding: 8px 12px;
-            font-size: 0.9rem;
-            outline: none;
-            transition: border-color 0.15s;
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: var(--text);
         }
-        .name-input:focus { border-color: #007acc; }
-
-        /* Start / Stop button */
-        .btn-action {
-            width: 100%;
-            padding: 18px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1rem;
+        .led-row .led-num {
+            font-size: 0.65rem;
+            color: var(--text3);
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+        .led-row input[type="color"] {
+            width: 48px;
+            height: 36px;
+            border: 1px solid var(--border2);
+            border-radius: var(--radius-xs);
+            background: var(--bg);
+            cursor: pointer;
+            padding: 2px;
+        }
+        .led-row .led-rgb {
+            font-family: ui-monospace, monospace;
+            font-size: 0.72rem;
+            color: var(--text3);
+            min-width: 100px;
+        }
+        .led-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+        .led-action-btn {
+            flex: 1;
+            padding: 9px 12px;
+            background: var(--bg3);
+            border: 1px solid var(--border2);
+            border-radius: var(--radius-xs);
+            color: var(--text);
+            font-size: 0.78rem;
             font-weight: 700;
             cursor: pointer;
             letter-spacing: 0.06em;
-            transition: all 0.15s;
-        }
-        .btn-action.start         { background: #1a7f4e; color: #fff; }
-        .btn-action.start:hover   { background: #1f9960; }
-        .btn-action.stop          { background: #7f1a1a; color: #fff; }
-        .btn-action.stop:hover    { background: #9f2020; }
-        .btn-action:disabled      { background: #252525; color: #444; cursor: not-allowed; }
-
-        /* Timer */
-        .timer-display {
-            text-align: center;
-            font-size: 2.4rem;
-            font-weight: 700;
-            font-variant-numeric: tabular-nums;
-            color: #4fc3f7;
-            padding: 8px 0 4px;
-            letter-spacing: 0.04em;
-        }
-        .timer-display.idle    { color: #444; }
-        .timer-display.warning { color: #f48771; }
-
-        .game-state-label {
-            text-align: center;
-            font-size: 0.7rem;
             text-transform: uppercase;
-            letter-spacing: 0.12em;
-            color: #555;
-            margin-bottom: 12px;
         }
-        .game-state-label.playing  { color: #4ec9b0; }
-        .game-state-label.finished { color: #f48771; }
-
-        /* Scores grid */
-        .scores-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-
-        .score-card {
-            border-radius: 8px;
-            padding: 10px 8px;
-            text-align: center;
-            display: none;
-            border-top: 3px solid var(--player-color, #333);
-            background: #252525;
-        }
-        .score-card.visible { display: block; }
-
-        .score-card .player-label {
-            font-size: 0.62rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            color: #555;
-            margin-bottom: 3px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .score-card .score-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--player-color, #e0e0e0);
-            font-variant-numeric: tabular-nums;
-        }
-
-        .btn-refresh {
-            background: none;
-            border: 1px solid #2a2a2a;
-            border-radius: 6px;
-            color: #555;
-            font-size: 0.75rem;
-            padding: 6px 14px;
-            cursor: pointer;
-            margin-top: 12px;
-            width: 100%;
-            transition: all 0.15s;
-        }
-        .btn-refresh:hover { border-color: #444; color: #999; }
+        .led-action-btn:hover { background: var(--bg2); }
+        .led-action-btn.danger { color: var(--danger); border-color: color-mix(in srgb, var(--danger) 40%, var(--border2)); }
     </style>
 </head>
 <body>
 
-    <div class="app-header">
-        <div class="app-title">Pandora 2026</div>
-        <div class="connection-badge" id="connBadge">
-            <div class="dot" id="dot"></div>
-            <span id="connLabel">Déconnecté</span>
-        </div>
-    </div>
+    <div id="portraitWarn">Bascule l'appareil en paysage pour utiliser la télécommande.</div>
 
-    <!-- Connexion -->
-    <div class="connect-panel visible" id="connectPanel">
-        <h2>Adresse IP du PC principal</h2>
-        <div class="connect-row">
+    <header>
+        <div class="app-title">
+            Pandora <span class="accent">2026</span>
+            <span class="version">v1.5.0</span>
+        </div>
+        <div class="header-right">
+            <div class="connection-badge" id="connBadge">
+                <div class="dot" id="dot"></div>
+                <span id="connLabel">Déconnecté</span>
+            </div>
+            <button class="header-btn" id="btnQrCodes" title="QR codes joueurs">📱 QR codes</button>
+            <button class="header-btn" id="btnLedPanel" title="LED Arduino par joueur">💡 LED</button>
+            <button class="header-btn" id="btnOscPanel">⚙ Régie OSC</button>
+            <button class="header-btn" id="btnFullscreen" title="Plein écran (F)">⛶ Plein écran</button>
+        </div>
+    </header>
+    <div class="checkered-bar"></div>
+
+    <main>
+        <section class="col">
+            <div>
+                <h2>Mode de jeu</h2>
+                <div class="btn-group" id="modeGroup">
+                    <button class="btn-option btn-mode selected" data-mode="timer">Timer<span class="sub">qui marque le plus</span></button>
+                    <button class="btn-option btn-mode" data-mode="race">Course<span class="sub">premier à N points</span></button>
+                    <button class="btn-option btn-mode" data-mode="suddendeath">Mort subite<span class="sub">prolongation</span></button>
+                </div>
+            </div>
+
+            <div>
+                <h2>Joueurs</h2>
+                <div class="btn-group" id="playerGroup">
+                    <button class="btn-option" data-players="1">1</button>
+                    <button class="btn-option" data-players="2">2</button>
+                    <button class="btn-option" data-players="3">3</button>
+                    <button class="btn-option" data-players="4">4</button>
+                    <button class="btn-option" data-players="5">5</button>
+                    <button class="btn-option" data-players="6">6</button>
+                </div>
+            </div>
+
+            <div class="mode-cond" id="durationSection">
+                <h2>Durée</h2>
+                <div class="btn-group" id="durationGroup">
+                    <button class="btn-option" data-duration="10">10<span class="sub">min</span></button>
+                    <button class="btn-option" data-duration="20">20<span class="sub">min</span></button>
+                    <button class="btn-option" data-duration="30">30<span class="sub">min</span></button>
+                </div>
+            </div>
+
+            <div class="mode-cond hidden" id="targetSection">
+                <h2>Objectif</h2>
+                <div class="btn-group" id="targetGroup">
+                    <button class="btn-option" data-target="10">10<span class="sub">points</span></button>
+                    <button class="btn-option" data-target="20">20<span class="sub">points</span></button>
+                    <button class="btn-option" data-target="50">50<span class="sub">points</span></button>
+                </div>
+            </div>
+
+            <div id="namesSection" style="display:none; flex:1; min-height:0; display:flex; flex-direction:column;">
+                <h2>Noms des joueurs</h2>
+                <div class="names-grid" id="nameInputsContainer"></div>
+            </div>
+        </section>
+
+        <section class="col col-center">
+            <div class="ring-wrap">
+                <svg class="ring-svg" viewBox="0 0 420 420">
+                    <circle class="ring-bg"  cx="210" cy="210" r="186"></circle>
+                    <circle class="ring-fg"  cx="210" cy="210" r="186" id="ringFg"
+                            stroke-dasharray="1168.67" stroke-dashoffset="0"></circle>
+                </svg>
+                <div class="ring-center">
+                    <div class="ring-time idle" id="ringTime">--:--</div>
+                    <div class="ring-state" id="ringState">En attente</div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn-action start" id="btnStart" disabled>DÉMARRER</button>
+                <button class="btn-reset" id="btnReset">Réinitialiser les scores</button>
+            </div>
+
+            <div class="flash-section">
+                <h2 style="margin-bottom:8px">📢 Message à projeter (5 sec)</h2>
+                <div class="flash-row">
+                    <input class="flash-input" id="flashInput" type="text"
+                           placeholder="Ex : Bonus actif ! Attention virage…" maxlength="80" autocomplete="off" />
+                    <button class="flash-send" id="btnFlashSend" disabled>Envoyer</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="col">
+            <div style="display:flex; justify-content:space-between; align-items:baseline">
+                <h2>Scores</h2>
+                <span style="font-size:0.66rem; color:var(--text3); letter-spacing:0.08em; text-transform:uppercase">touche « − » pour annuler un point</span>
+            </div>
+            <div class="scores-grid" id="scoresGrid"></div>
+        </section>
+    </main>
+
+    <div class="overlay" id="connectPanel">
+        <h2 style="margin-bottom:12px">Connexion au Mac</h2>
+        <div class="overlay-row">
             <span class="ws-affix">ws://</span>
-            <input type="text" id="ipAddress" value="localhost" placeholder="192.168.1.x" inputmode="decimal" autocomplete="off" />
+            <input id="ipAddress" type="text" placeholder="IP du Mac" value="localhost" autocomplete="off" />
             <span class="ws-affix">:8080</span>
-            <button class="btn-connect" id="btnConnect">Connecter</button>
+            <button class="btn-apply" id="btnConnect">Connecter</button>
         </div>
     </div>
 
-    <!-- Joueurs -->
-    <div class="section">
-        <h2>Joueurs</h2>
-        <div class="btn-group" id="playerGroup">
-            <button class="btn-option" data-players="1">1</button>
-            <button class="btn-option" data-players="2">2</button>
-            <button class="btn-option" data-players="3">3</button>
-            <button class="btn-option" data-players="4">4</button>
-            <button class="btn-option" data-players="5">5</button>
-            <button class="btn-option" data-players="6">6</button>
+    <div id="qrLocalOverlay">
+        <button class="qr-local-close" id="btnQrClose">✕ Fermer</button>
+        <div class="qr-local-title">🏁 QR codes <span class="accent">joueurs</span> 🏁</div>
+        <div class="qr-local-subtitle">
+            Demande aux joueurs de scanner — page sur <span class="url" id="qrLocalBaseUrl">i-immersion.github.io/pandora-player</span>
+        </div>
+        <div class="qr-local-grid" id="qrLocalGrid"></div>
+        <div class="qr-local-hint">Appuie à nouveau sur « 📱 QR codes » dans le header pour fermer</div>
+    </div>
+
+    <div id="ledPanel">
+        <div class="led-title">💡 LED Arduino — <span class="accent">par joueur</span></div>
+        <div id="ledRows"></div>
+        <div class="led-actions">
+            <button class="led-action-btn" id="btnLedNative">🔄 Couleurs natives</button>
+            <button class="led-action-btn danger" id="btnLedClear">⏻ Tout éteindre</button>
         </div>
     </div>
 
-    <!-- Noms -->
-    <div class="section" id="namesSection" style="display:none">
-        <h2>Noms des joueurs</h2>
-        <div id="nameInputsContainer"></div>
-    </div>
-
-    <!-- Durée -->
-    <div class="section">
-        <h2>Durée</h2>
-        <div class="btn-group" id="durationGroup">
-            <button class="btn-option" data-duration="10">10<span class="sub">min</span></button>
-            <button class="btn-option" data-duration="20">20<span class="sub">min</span></button>
-            <button class="btn-option" data-duration="30">30<span class="sub">min</span></button>
+    <div class="overlay" id="oscPanel">
+        <h2 style="margin-bottom:12px">Sortie OSC vers la régie (Chataigne / QLab / Resolume / Ableton)</h2>
+        <div class="overlay-row">
+            <label>HOST</label>
+            <input id="oscHost" type="text" placeholder="127.0.0.1" value="127.0.0.1" autocomplete="off" />
         </div>
-    </div>
-
-    <!-- Contrôle -->
-    <div class="section">
-        <div class="game-state-label" id="gameStateLabel">En attente</div>
-        <div class="timer-display idle" id="timerDisplay">--:--</div>
-        <br>
-        <button class="btn-action start" id="btnStart" disabled>DÉMARRER</button>
-    </div>
-
-    <!-- Scores -->
-    <div class="section">
-        <h2>Scores</h2>
-        <div class="scores-grid" id="scoresGrid">
-            <div class="score-card" id="score-1"><div class="player-label" id="slabel-1">Joueur 1</div><div class="score-value" id="sv-1">—</div></div>
-            <div class="score-card" id="score-2"><div class="player-label" id="slabel-2">Joueur 2</div><div class="score-value" id="sv-2">—</div></div>
-            <div class="score-card" id="score-3"><div class="player-label" id="slabel-3">Joueur 3</div><div class="score-value" id="sv-3">—</div></div>
-            <div class="score-card" id="score-4"><div class="player-label" id="slabel-4">Joueur 4</div><div class="score-value" id="sv-4">—</div></div>
-            <div class="score-card" id="score-5"><div class="player-label" id="slabel-5">Joueur 5</div><div class="score-value" id="sv-5">—</div></div>
-            <div class="score-card" id="score-6"><div class="player-label" id="slabel-6">Joueur 6</div><div class="score-value" id="sv-6">—</div></div>
+        <div class="overlay-row">
+            <label>PORT</label>
+            <input id="oscPort" type="number" placeholder="7000" value="7000" autocomplete="off" />
+            <button class="btn-apply" id="btnOscApply">Appliquer</button>
         </div>
-        <button class="btn-refresh" id="btnScores">↻  Actualiser les scores</button>
+        <div class="osc-doc">
+            /pandora/game/{started|stopped|finished|reset}<br>
+            /pandora/score/&lt;N&gt;/{value|added|removed}<br>
+            /pandora/leader &lt;int&gt;  ·  /pandora/winner/&lt;N&gt;<br>
+            /pandora/{state|mode|players|duration|target}<br>
+            /pandora/suddendeath/enter<br>
+            /pandora/message &lt;text&gt;  ·  /pandora/message/clear
+        </div>
     </div>
 
     <script>
-        const PLAYER_COLORS = ['#e63946', '#ffc300', '#7ed321', '#00c8e0', '#4361ee', '#e040fb'];
+        const VERSION = 'v1.5.0';
+        const PLAYER_COLORS = ['#ff6b35', '#fbbf24', '#4ade80', '#00e5ff', '#c084fc', '#f43f5e'];
         const DEFAULT_NAMES = ['Joueur 1', 'Joueur 2', 'Joueur 3', 'Joueur 4', 'Joueur 5', 'Joueur 6'];
 
-        let socket          = null;
-        let selectedPlayers = 0;
-        let selectedDuration= 0;
-        let gameRunning     = false;
-        let timerInterval   = null;
-        let remainingSeconds= 0;
-        let playerNames     = [...DEFAULT_NAMES];
+        const RING_CIRCUMFERENCE = 2 * Math.PI * 186;
+        document.getElementById('ringFg').setAttribute('stroke-dasharray', RING_CIRCUMFERENCE);
 
-        // Apply player colors to static score cards
-        for (let i = 1; i <= 6; i++) {
-            document.getElementById(`score-${i}`).style.setProperty('--player-color', PLAYER_COLORS[i - 1]);
+        let socket           = null;
+        let selectedMode     = 'timer';
+        let selectedPlayers  = 0;
+        let selectedDuration = 0;
+        let selectedTarget   = 0;
+        let gameRunning      = false;
+        let currentState     = 'idle';
+        let timerInterval    = null;
+        let remainingSeconds = 0;
+        let totalSeconds     = 0;
+        let currentScores    = [0, 0, 0, 0, 0, 0];
+        let playerNames      = [...DEFAULT_NAMES];
+        let qrShown          = false;
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+            else document.exitFullscreen().catch(() => {});
         }
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+        });
+
+        function savePrefs() {
+            try {
+                localStorage.setItem('pandora.prefs', JSON.stringify({
+                    mode: selectedMode, players: selectedPlayers,
+                    duration: selectedDuration, target: selectedTarget, names: playerNames
+                }));
+            } catch {}
+        }
+        function loadPrefs() {
+            try {
+                const raw = localStorage.getItem('pandora.prefs');
+                if (!raw) return;
+                const p = JSON.parse(raw);
+                if (p.mode)     selectedMode     = p.mode;
+                if (p.players)  selectedPlayers  = p.players;
+                if (p.duration) selectedDuration = p.duration;
+                if (p.target)   selectedTarget   = p.target;
+                if (Array.isArray(p.names)) playerNames = p.names.concat(DEFAULT_NAMES.slice(p.names.length)).slice(0, 6);
+            } catch {}
+        }
+        loadPrefs();
 
         const dot          = document.getElementById('dot');
         const connLabel    = document.getElementById('connLabel');
         const connBadge    = document.getElementById('connBadge');
         const connectPanel = document.getElementById('connectPanel');
+        const oscPanel     = document.getElementById('oscPanel');
         const btnStart     = document.getElementById('btnStart');
-        const timerDisplay = document.getElementById('timerDisplay');
-        const gameStateLabel = document.getElementById('gameStateLabel');
+        const btnReset     = document.getElementById('btnReset');
+        const btnFlashSend = document.getElementById('btnFlashSend');
+        const flashInput   = document.getElementById('flashInput');
+        const btnQrCodes   = document.getElementById('btnQrCodes');
+        const ringTime     = document.getElementById('ringTime');
+        const ringState    = document.getElementById('ringState');
+        const ringFg       = document.getElementById('ringFg');
 
-        // Toggle connect panel
-        connBadge.addEventListener('click', () => connectPanel.classList.toggle('visible'));
+        const scoresGrid = document.getElementById('scoresGrid');
+        for (let i = 1; i <= 6; i++) {
+            const card = document.createElement('div');
+            card.className = 'score-card';
+            card.id = `score-${i}`;
+            card.style.setProperty('--player-color', PLAYER_COLORS[i - 1]);
+            card.innerHTML = `
+                <div class="score-card-header">
+                    <span class="player-label" id="slabel-${i}">Joueur ${i}</span>
+                    <button class="btn-undo" data-undo="${i}" title="Annuler un point">−</button>
+                </div>
+                <div class="score-value" id="sv-${i}">—</div>
+            `;
+            scoresGrid.appendChild(card);
+        }
+
+        connBadge.addEventListener('click', () => {
+            oscPanel.classList.remove('visible');
+            connectPanel.classList.toggle('visible');
+        });
+        document.getElementById('btnOscPanel').addEventListener('click', () => {
+            connectPanel.classList.remove('visible');
+            oscPanel.classList.toggle('visible');
+        });
+        document.getElementById('btnFullscreen').addEventListener('click', toggleFullscreen);
+        btnQrCodes.addEventListener('click', () => {
+            qrShown = !qrShown;
+            btnQrCodes.classList.toggle('active', qrShown);
+            if (qrShown) {
+                send({ type: 'show_qr_codes' });
+                send({ type: 'request_qr_codes', players: selectedPlayers || 6 });
+            } else {
+                send({ type: 'hide_qr_codes' });
+                document.getElementById('qrLocalOverlay').classList.remove('visible');
+            }
+        });
+        document.getElementById('btnQrClose').addEventListener('click', () => {
+            qrShown = false;
+            btnQrCodes.classList.remove('active');
+            send({ type: 'hide_qr_codes' });
+            document.getElementById('qrLocalOverlay').classList.remove('visible');
+        });
+
+        // ─── LED Panel ───────────────────────────────────────────────────────
+        function hexToRgb(hex) {
+            const h = (hex || '').replace('#', '');
+            return {
+                r: parseInt(h.slice(0, 2), 16) || 0,
+                g: parseInt(h.slice(2, 4), 16) || 0,
+                b: parseInt(h.slice(4, 6), 16) || 0
+            };
+        }
+        function buildLedRows() {
+            const container = document.getElementById('ledRows');
+            container.innerHTML = '';
+            for (let i = 1; i <= 6; i++) {
+                const color = PLAYER_COLORS[i - 1];
+                const { r, g, b } = hexToRgb(color);
+                const row = document.createElement('div');
+                row.className = 'led-row';
+                row.style.setProperty('--player-color', color);
+                row.innerHTML = `
+                    <span class="led-num">J${i}</span>
+                    <span class="led-name" id="ledName-${i}">${playerNames[i - 1] || `Joueur ${i}`}</span>
+                    <span class="led-rgb" id="ledRgb-${i}">${r},${g},${b}</span>
+                    <input type="color" id="ledPicker-${i}" value="${color}" data-player="${i}" />
+                `;
+                container.appendChild(row);
+            }
+            container.querySelectorAll('input[type="color"]').forEach(picker => {
+                picker.addEventListener('input', e => {
+                    const p = parseInt(e.target.dataset.player);
+                    const { r, g, b } = hexToRgb(e.target.value);
+                    document.getElementById(`ledRgb-${p}`).textContent = `${r},${g},${b}`;
+                    send({ type: 'set_player_color', player: p, r, g, b });
+                });
+            });
+        }
+        function refreshLedNames() {
+            for (let i = 1; i <= 6; i++) {
+                const el = document.getElementById(`ledName-${i}`);
+                if (el) el.textContent = playerNames[i - 1] || `Joueur ${i}`;
+            }
+        }
+        function resetLedPickersToNative() {
+            for (let i = 1; i <= 6; i++) {
+                const color = PLAYER_COLORS[i - 1];
+                const { r, g, b } = hexToRgb(color);
+                const picker = document.getElementById(`ledPicker-${i}`);
+                const rgbEl  = document.getElementById(`ledRgb-${i}`);
+                if (picker) picker.value = color;
+                if (rgbEl) rgbEl.textContent = `${r},${g},${b}`;
+            }
+        }
+        function setLedPickersToBlack() {
+            for (let i = 1; i <= 6; i++) {
+                const picker = document.getElementById(`ledPicker-${i}`);
+                const rgbEl  = document.getElementById(`ledRgb-${i}`);
+                if (picker) picker.value = '#000000';
+                if (rgbEl) rgbEl.textContent = '0,0,0';
+            }
+        }
+
+        document.getElementById('btnLedPanel').addEventListener('click', () => {
+            connectPanel.classList.remove('visible');
+            oscPanel.classList.remove('visible');
+            document.getElementById('ledPanel').classList.toggle('visible');
+        });
+        document.getElementById('btnLedNative').addEventListener('click', () => {
+            send({ type: 'reset_leds' });
+            resetLedPickersToNative();
+        });
+        document.getElementById('btnLedClear').addEventListener('click', () => {
+            send({ type: 'clear_leds' });
+            setLedPickersToBlack();
+        });
+        document.addEventListener('click', e => {
+            if (!e.target.closest('.overlay') && !e.target.closest('#ledPanel') &&
+                !e.target.closest('#connBadge') && !e.target.closest('#btnOscPanel') &&
+                !e.target.closest('#btnLedPanel')) {
+                connectPanel.classList.remove('visible');
+                oscPanel.classList.remove('visible');
+                document.getElementById('ledPanel').classList.remove('visible');
+            }
+        });
 
         document.getElementById('btnConnect').addEventListener('click', connect);
         document.getElementById('ipAddress').addEventListener('keydown', e => { if (e.key === 'Enter') connect(); });
+        document.getElementById('btnOscApply').addEventListener('click', () => {
+            const host = document.getElementById('oscHost').value.trim() || '127.0.0.1';
+            const port = parseInt(document.getElementById('oscPort').value) || 7000;
+            send({ type: 'set_osc_out', host, port });
+        });
+
+        function updateFlashBtnState() {
+            const hasText = flashInput.value.trim().length > 0;
+            const connected = socket && socket.readyState === WebSocket.OPEN;
+            btnFlashSend.disabled = !(hasText && connected);
+        }
+        flashInput.addEventListener('input', updateFlashBtnState);
+        function sendFlashMessage() {
+            const text = flashInput.value.trim();
+            if (!text) return;
+            send({ type: 'flash_message', text, duration: 5000 });
+            flashInput.value = '';
+            updateFlashBtnState();
+        }
+        btnFlashSend.addEventListener('click', sendFlashMessage);
+        flashInput.addEventListener('keydown', e => {
+            if (e.key === 'Enter' && !btnFlashSend.disabled) sendFlashMessage();
+        });
 
         function connect() {
             if (socket) { socket.close(); socket = null; }
@@ -387,24 +870,46 @@
             const addr = `ws://${ip}:8080`;
             try { socket = new WebSocket(addr); } catch { setConnState('error'); return; }
 
-            socket.onopen    = () => { setConnState('connected'); connectPanel.classList.remove('visible'); };
+            socket.onopen    = () => {
+                setConnState('connected');
+                connectPanel.classList.remove('visible');
+                send({ type: 'set_mode',     mode:    selectedMode });
+                if (selectedPlayers)  send({ type: 'set_players',  count:   selectedPlayers });
+                if (selectedDuration) send({ type: 'set_duration', minutes: selectedDuration });
+                if (selectedTarget)   send({ type: 'set_target',   target:  selectedTarget });
+                send({ type: 'set_names', names: playerNames.map((n, i) => n.trim() || DEFAULT_NAMES[i]) });
+                updateFlashBtnState();
+            };
             socket.onmessage = e => { try { handleServerMessage(JSON.parse(e.data)); } catch {} };
-            socket.onclose   = () => { setConnState('disconnected'); stopLocalTimer(); };
+            socket.onclose   = () => { setConnState('disconnected'); stopLocalTimer(); updateFlashBtnState(); };
             socket.onerror   = () => setConnState('error');
         }
-
         function setConnState(state) {
             dot.className = 'dot';
             if (state === 'connected')    { dot.classList.add('connected'); connLabel.textContent = 'Connecté'; }
             else if (state === 'error')   { dot.classList.add('error');     connLabel.textContent = 'Erreur';   }
             else                          {                                  connLabel.textContent = 'Déconnecté'; }
         }
-
         function send(obj) {
             if (socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify(obj));
         }
 
-        // ─── Player selection ─────────────────────────────────────────────────────────
+        document.getElementById('modeGroup').addEventListener('click', e => {
+            const btn = e.target.closest('[data-mode]');
+            if (!btn) return;
+            selectedMode = btn.dataset.mode;
+            document.querySelectorAll('[data-mode]').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            applyModeUI();
+            checkReady();
+            send({ type: 'set_mode', mode: selectedMode });
+            savePrefs();
+        });
+        function applyModeUI() {
+            document.getElementById('durationSection').classList.toggle('hidden', selectedMode === 'race');
+            document.getElementById('targetSection').classList.toggle('hidden', selectedMode !== 'race');
+            if (!gameRunning) refreshRingDisplay();
+        }
 
         document.getElementById('playerGroup').addEventListener('click', e => {
             const btn = e.target.closest('[data-players]');
@@ -416,18 +921,14 @@
             updateScoreGrid();
             checkReady();
             send({ type: 'set_players', count: selectedPlayers });
+            savePrefs();
         });
-
-        // ─── Name inputs ──────────────────────────────────────────────────────────────
-
         function buildNameInputs() {
             const section   = document.getElementById('namesSection');
             const container = document.getElementById('nameInputsContainer');
-
             if (selectedPlayers === 0) { section.style.display = 'none'; return; }
-            section.style.display = 'block';
-            container.innerHTML   = '';
-
+            section.style.display = 'flex';
+            container.innerHTML = '';
             for (let i = 0; i < selectedPlayers; i++) {
                 const row = document.createElement('div');
                 row.className = 'name-row';
@@ -435,33 +936,27 @@
                     <div class="name-dot" style="background:${PLAYER_COLORS[i]}"></div>
                     <input class="name-input" type="text"
                            placeholder="${DEFAULT_NAMES[i]}"
-                           value="${playerNames[i]}"
+                           value="${playerNames[i] || ''}"
                            data-idx="${i}" />
                 `;
                 container.appendChild(row);
             }
-
             container.querySelectorAll('.name-input').forEach(input => {
                 input.addEventListener('input', e => {
                     const idx = parseInt(e.target.dataset.idx);
                     playerNames[idx] = e.target.value || DEFAULT_NAMES[idx];
                     updateScoreLabel(idx);
-                    // Trim only in the sent payload, not in the live value
+                    refreshLedNames();
                     send({ type: 'set_names', names: playerNames.map((n, i) => n.trim() || DEFAULT_NAMES[i]) });
+                    savePrefs();
                 });
             });
         }
-
         function updateScoreLabel(idx) {
             const el = document.getElementById(`slabel-${idx + 1}`);
             if (el) el.textContent = playerNames[idx];
         }
-
-        function refreshAllScoreLabels() {
-            for (let i = 0; i < 6; i++) updateScoreLabel(i);
-        }
-
-        // ─── Duration ─────────────────────────────────────────────────────────────────
+        function refreshAllScoreLabels() { for (let i = 0; i < 6; i++) updateScoreLabel(i); }
 
         document.getElementById('durationGroup').addEventListener('click', e => {
             const btn = e.target.closest('[data-duration]');
@@ -471,128 +966,219 @@
             btn.classList.add('selected');
             checkReady();
             send({ type: 'set_duration', minutes: selectedDuration });
-            if (!gameRunning) setTimerDisplay(selectedDuration * 60);
+            if (!gameRunning && selectedMode !== 'race') refreshRingDisplay();
+            savePrefs();
         });
-
+        document.getElementById('targetGroup').addEventListener('click', e => {
+            const btn = e.target.closest('[data-target]');
+            if (!btn) return;
+            selectedTarget = parseInt(btn.dataset.target);
+            document.querySelectorAll('[data-target]').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            checkReady();
+            send({ type: 'set_target', target: selectedTarget });
+            if (!gameRunning && selectedMode === 'race') refreshRingDisplay();
+            savePrefs();
+        });
         function checkReady() {
-            btnStart.disabled = !(selectedPlayers > 0 && selectedDuration > 0);
+            btnStart.disabled = !(selectedPlayers > 0 && (
+                (selectedMode === 'race' && selectedTarget > 0) ||
+                (selectedMode !== 'race' && selectedDuration > 0)
+            ));
         }
-
-        // ─── Start / Stop ─────────────────────────────────────────────────────────────
 
         btnStart.addEventListener('click', () => {
             if (!gameRunning) {
                 send({ type: 'start_game' });
                 setGameState('playing');
+                if (selectedMode !== 'race') {
+                    totalSeconds = selectedDuration * 60;
+                    startLocalTimer(totalSeconds);
+                }
             } else {
                 send({ type: 'stop_game' });
                 setGameState('stopped');
             }
         });
+        btnReset.addEventListener('click', () => {
+            if (gameRunning && !confirm('Réinitialiser la partie en cours ?')) return;
+            send({ type: 'reset_game' });
+            currentScores = [0, 0, 0, 0, 0, 0];
+            for (let i = 1; i <= 6; i++) {
+                document.getElementById(`sv-${i}`).textContent = '0';
+                document.getElementById(`score-${i}`).classList.toggle('visible', i <= selectedPlayers);
+            }
+            refreshUndoButtons();
+        });
 
-        document.getElementById('btnScores').addEventListener('click', () => send({ type: 'get_scores' }));
-
-        function setGameState(state) {
-            if (state === 'playing') {
-                gameRunning = true;
-                btnStart.textContent    = 'ARRÊTER';
-                btnStart.className      = 'btn-action stop';
-                gameStateLabel.textContent = 'En cours';
-                gameStateLabel.className   = 'game-state-label playing';
-                startLocalTimer(selectedDuration * 60);
-
-            } else if (state === 'stopped' || state === 'idle') {
-                gameRunning = false;
-                btnStart.textContent    = 'DÉMARRER';
-                btnStart.className      = 'btn-action start';
-                gameStateLabel.textContent = 'En attente';
-                gameStateLabel.className   = 'game-state-label';
-                stopLocalTimer();
-                if (selectedDuration > 0) setTimerDisplay(selectedDuration * 60);
-
-            } else if (state === 'finished') {
-                gameRunning = false;
-                btnStart.textContent    = 'DÉMARRER';
-                btnStart.className      = 'btn-action start';
-                gameStateLabel.textContent = 'Terminé';
-                gameStateLabel.className   = 'game-state-label finished';
-                stopLocalTimer();
-                setTimerDisplay(0);
-                send({ type: 'get_scores' });
+        scoresGrid.addEventListener('click', e => {
+            const btn = e.target.closest('[data-undo]');
+            if (!btn) return;
+            const player = parseInt(btn.dataset.undo);
+            if (currentScores[player - 1] > 0) send({ type: 'undo_point', player });
+        });
+        function refreshUndoButtons() {
+            for (let i = 1; i <= 6; i++) {
+                const btn = scoresGrid.querySelector(`[data-undo="${i}"]`);
+                if (btn) btn.disabled = currentScores[i - 1] <= 0;
             }
         }
 
-        // ─── Local timer (mirror of index.html) ───────────────────────────────────────
+        function setRingProgress(percent) {
+            ringFg.setAttribute('stroke-dashoffset', RING_CIRCUMFERENCE * (1 - percent));
+        }
+        function refreshRingDisplay() {
+            if (gameRunning) return;
+            ringTime.className = 'ring-time idle';
+            if (selectedMode === 'race' && selectedTarget) {
+                ringTime.textContent = `0 / ${selectedTarget}`;
+                setRingProgress(0);
+                ringFg.className.baseVal = 'ring-fg';
+            } else if (selectedDuration) {
+                const s = selectedDuration * 60;
+                const m = Math.floor(s / 60).toString().padStart(2, '0');
+                const sec = (s % 60).toString().padStart(2, '0');
+                ringTime.textContent = `${m}:${sec}`;
+                setRingProgress(0);
+                ringFg.className.baseVal = 'ring-fg';
+            } else {
+                ringTime.textContent = '--:--';
+                setRingProgress(0);
+                ringFg.className.baseVal = 'ring-fg';
+            }
+        }
 
+        function setGameState(state) {
+            currentState = state;
+            if (state === 'playing') {
+                gameRunning = true;
+                btnStart.textContent       = 'ARRÊTER';
+                btnStart.className         = 'btn-action stop';
+                ringState.textContent      = 'En cours';
+                ringState.className        = 'ring-state playing';
+                if (selectedMode === 'race') { stopLocalTimer(); refreshRaceDisplay(); }
+            } else if (state === 'stopped' || state === 'idle') {
+                gameRunning = false;
+                btnStart.textContent       = 'DÉMARRER';
+                btnStart.className         = 'btn-action start';
+                ringState.textContent      = state === 'stopped' ? 'Arrêté' : 'En attente';
+                ringState.className        = 'ring-state';
+                stopLocalTimer();
+                refreshRingDisplay();
+            } else if (state === 'finished') {
+                gameRunning = false;
+                btnStart.textContent       = 'DÉMARRER';
+                btnStart.className         = 'btn-action start';
+                ringState.textContent      = 'Terminé';
+                ringState.className        = 'ring-state finished';
+                stopLocalTimer();
+                if (selectedMode === 'race') refreshRaceDisplay();
+                else { setRingTime(0); setRingProgress(1); ringFg.className.baseVal = 'ring-fg danger'; }
+                send({ type: 'get_scores' });
+            } else if (state === 'suddendeath') {
+                gameRunning = true;
+                btnStart.textContent       = 'ARRÊTER';
+                btnStart.className         = 'btn-action stop';
+                ringState.textContent      = 'Mort subite';
+                ringState.className        = 'ring-state suddendeath';
+                stopLocalTimer();
+                ringTime.textContent       = '∞';
+                ringTime.className         = 'ring-time warning';
+                setRingProgress(1);
+                ringFg.className.baseVal   = 'ring-fg warning';
+            }
+        }
+        function refreshRaceDisplay() {
+            const active = currentScores.slice(0, selectedPlayers);
+            const max = Math.max(...active, 0);
+            ringTime.textContent = `${max} / ${selectedTarget}`;
+            ringTime.className   = 'ring-time';
+            const pct = selectedTarget > 0 ? Math.min(max / selectedTarget, 1) : 0;
+            setRingProgress(pct);
+            if (selectedTarget - max <= 1 && gameRunning) {
+                ringTime.classList.add('warning');
+                ringFg.className.baseVal = 'ring-fg warning';
+            } else {
+                ringFg.className.baseVal = 'ring-fg playing';
+            }
+        }
+        function setRingTime(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            ringTime.textContent = `${m}:${s}`;
+            ringTime.className = 'ring-time';
+            if (seconds === 0 && !gameRunning)     ringTime.classList.add('idle');
+            else if (seconds <= 10 && gameRunning) ringTime.classList.add('danger');
+            else if (seconds <= 60 && gameRunning) ringTime.classList.add('warning');
+        }
+        function setRingFgColor(remaining) {
+            ringFg.className.baseVal = 'ring-fg';
+            if (!gameRunning)         return;
+            if (remaining <= 10)      ringFg.className.baseVal = 'ring-fg danger';
+            else if (remaining <= 60) ringFg.className.baseVal = 'ring-fg warning';
+            else                       ringFg.className.baseVal = 'ring-fg playing';
+        }
         function startLocalTimer(seconds) {
             stopLocalTimer();
             remainingSeconds = seconds;
-            setTimerDisplay(remainingSeconds);
+            if (totalSeconds <= 0) totalSeconds = seconds;
+            setRingTime(remainingSeconds);
+            setRingProgress(totalSeconds > 0 ? 1 - remainingSeconds / totalSeconds : 0);
+            setRingFgColor(remainingSeconds);
             timerInterval = setInterval(() => {
                 remainingSeconds--;
                 if (remainingSeconds <= 0) {
                     remainingSeconds = 0;
-                    setTimerDisplay(0);
+                    setRingTime(0);
+                    setRingProgress(1);
+                    setRingFgColor(0);
                     stopLocalTimer();
-                    setGameState('finished');
                 } else {
-                    setTimerDisplay(remainingSeconds);
+                    setRingTime(remainingSeconds);
+                    setRingProgress(totalSeconds > 0 ? 1 - remainingSeconds / totalSeconds : 0);
+                    setRingFgColor(remainingSeconds);
                 }
             }, 1000);
         }
-
-        function stopLocalTimer() {
-            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-        }
-
-        function setTimerDisplay(seconds) {
-            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-            const s = (seconds % 60).toString().padStart(2, '0');
-            timerDisplay.textContent = `${m}:${s}`;
-            timerDisplay.className = 'timer-display';
-            if (seconds === 0 && !gameRunning)       timerDisplay.classList.add('idle');
-            else if (seconds <= 60 && gameRunning)   timerDisplay.classList.add('warning');
-        }
-
-        // ─── Score grid ───────────────────────────────────────────────────────────────
+        function stopLocalTimer() { if (timerInterval) { clearInterval(timerInterval); timerInterval = null; } }
 
         function updateScoreGrid() {
             for (let i = 1; i <= 6; i++) {
-                const card = document.getElementById(`score-${i}`);
-                card.classList.toggle('visible', i <= selectedPlayers);
+                document.getElementById(`score-${i}`).classList.toggle('visible', i <= selectedPlayers);
             }
         }
 
-        // ─── Server messages ──────────────────────────────────────────────────────────
-
         function handleServerMessage(data) {
-
             if (data.type === 'scores' && Array.isArray(data.scores)) {
                 data.scores.forEach(({ player, score }) => {
+                    currentScores[player - 1] = score;
                     const el = document.getElementById(`sv-${player}`);
                     if (el) el.textContent = score;
                 });
+                refreshUndoButtons();
+                if (selectedMode === 'race') refreshRaceDisplay();
             }
-
             if (data.type === 'game_state') {
                 setGameState(data.state);
-                if (data.remaining !== undefined) {
-                    stopLocalTimer();
-                    remainingSeconds = data.remaining;
-                    setTimerDisplay(remainingSeconds);
-                    if (data.state === 'playing') startLocalTimer(remainingSeconds);
+                if (data.state === 'playing' && selectedMode !== 'race' && data.remaining !== undefined) {
+                    totalSeconds = data.total || totalSeconds || (selectedDuration * 60);
+                    startLocalTimer(data.remaining);
                 }
             }
-
             if (data.type === 'config') {
+                if (data.mode) {
+                    selectedMode = data.mode;
+                    document.querySelectorAll('[data-mode]').forEach(b => {
+                        b.classList.toggle('selected', b.dataset.mode === selectedMode);
+                    });
+                    applyModeUI();
+                }
                 const prevPlayers = selectedPlayers;
-
                 if (data.players) {
                     selectedPlayers = data.players;
                     document.querySelectorAll('[data-players]').forEach(b => {
                         b.classList.toggle('selected', parseInt(b.dataset.players) === selectedPlayers);
                     });
-                    // Rebuild inputs only when player count actually changes
                     if (data.players !== prevPlayers) buildNameInputs();
                     updateScoreGrid();
                 }
@@ -602,22 +1188,89 @@
                         b.classList.toggle('selected', parseInt(b.dataset.duration) === selectedDuration);
                     });
                 }
+                if (data.target) {
+                    selectedTarget = data.target;
+                    document.querySelectorAll('[data-target]').forEach(b => {
+                        b.classList.toggle('selected', parseInt(b.dataset.target) === selectedTarget);
+                    });
+                }
                 if (Array.isArray(data.names)) {
                     data.names.forEach((name, i) => { if (name) playerNames[i] = name; });
-                    // Never overwrite the input currently being typed in
                     document.querySelectorAll('.name-input').forEach(input => {
                         if (input === document.activeElement) return;
                         const idx = parseInt(input.dataset.idx);
                         input.value = playerNames[idx] || DEFAULT_NAMES[idx];
                     });
                     refreshAllScoreLabels();
+                    refreshLedNames();
                 }
                 checkReady();
+                if (!gameRunning) refreshRingDisplay();
+                savePrefs();
+            }
+            if (data.type === 'osc_out_config') {
+                if (data.host) document.getElementById('oscHost').value = data.host;
+                if (data.port) document.getElementById('oscPort').value = data.port;
+            }
+
+            if (data.type === 'qr_codes' && Array.isArray(data.codes)) {
+                renderLocalQrOverlay(data);
             }
         }
 
-        // Auto-connect
+        function renderLocalQrOverlay(data) {
+            const grid = document.getElementById('qrLocalGrid');
+            const count = data.players || data.codes.length;
+            grid.dataset.count = count;
+            grid.innerHTML = '';
+            data.codes.slice(0, count).forEach((c, idx) => {
+                const card = document.createElement('div');
+                card.className = 'qr-local-card';
+                card.style.setProperty('--player-color', PLAYER_COLORS[idx]);
+                const name = playerNames[idx] || `Joueur ${c.player}`;
+                card.innerHTML = `
+                    ${c.dataUrl ? `<img src="${c.dataUrl}" alt="QR Joueur ${c.player}" />` : '<div style="color:var(--danger);padding:40px">QR erreur</div>'}
+                    <div class="qr-local-name">${name.replace(/[<>&"']/g, ch => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;',"'":'&#39;'}[ch]))}</div>
+                    <div class="qr-local-id">Joueur ${c.player}</div>
+                `;
+                grid.appendChild(card);
+            });
+            if (data.baseUrl) document.getElementById('qrLocalBaseUrl').textContent = data.baseUrl.replace(/^https?:\/\//, '');
+            document.getElementById('qrLocalOverlay').classList.add('visible');
+        }
+
+        function initFromPrefs() {
+            document.querySelectorAll('[data-mode]').forEach(b => {
+                b.classList.toggle('selected', b.dataset.mode === selectedMode);
+            });
+            applyModeUI();
+            if (selectedPlayers) {
+                document.querySelectorAll('[data-players]').forEach(b => {
+                    b.classList.toggle('selected', parseInt(b.dataset.players) === selectedPlayers);
+                });
+                buildNameInputs();
+                updateScoreGrid();
+            }
+            if (selectedDuration) {
+                document.querySelectorAll('[data-duration]').forEach(b => {
+                    b.classList.toggle('selected', parseInt(b.dataset.duration) === selectedDuration);
+                });
+            }
+            if (selectedTarget) {
+                document.querySelectorAll('[data-target]').forEach(b => {
+                    b.classList.toggle('selected', parseInt(b.dataset.target) === selectedTarget);
+                });
+            }
+            refreshAllScoreLabels();
+            refreshUndoButtons();
+            refreshRingDisplay();
+            updateFlashBtnState();
+            checkReady();
+            buildLedRows();
+        }
+        initFromPrefs();
         connect();
+        console.log(`Pandora Remote ${VERSION} ready.`);
     </script>
 </body>
 </html>

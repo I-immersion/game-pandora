@@ -1,3 +1,4 @@
+<!-- Pandora 2026 — Projection v1.5.0 -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -7,96 +8,158 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --c1: #e63946;
-            --c2: #ffc300;
-            --c3: #7ed321;
-            --c4: #00c8e0;
-            --c5: #4361ee;
-            --c6: #e040fb;
+            --bg:      #0d0d0f;
+            --bg2:     #141417;
+            --bg3:     #1c1c21;
+            --border:  rgba(255,255,255,0.07);
+            --text:    #f0f0f2;
+            --text2:   #888890;
+            --text3:   #555560;
+
+            --p1: #ff6b35;  --p2: #fbbf24;  --p3: #4ade80;
+            --p4: #00e5ff;  --p5: #c084fc;  --p6: #f43f5e;
+
+            --playing: #4ade80;
+            --warning: #fbbf24;
+            --danger:  #f43f5e;
+            --info:    #00e5ff;
+
+            --radius:    16px;
+            --radius-sm: 10px;
         }
 
         html, body {
             width: 1920px;
             height: 1080px;
             overflow: hidden;
-            background: #080808;
+            background: var(--bg);
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            color: #fff;
+            color: var(--text);
             user-select: none;
         }
 
-        /* ─── TOP BAR ─── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: repeating-linear-gradient(-45deg, transparent 0 40px, rgba(255,255,255,0.012) 40px 80px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
         .topbar {
             height: 110px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 52px;
-            background: #0c0c0c;
-            border-bottom: 1px solid #1a1a1a;
+            background: var(--bg2);
+            position: relative;
+            z-index: 2;
         }
-
+        .checkered-bar {
+            height: 10px;
+            background: repeating-linear-gradient(90deg, var(--text) 0 14px, var(--bg) 14px 28px);
+            opacity: 0.12;
+            position: relative;
+            z-index: 2;
+        }
         .game-title {
             font-size: 1.3rem;
             font-weight: 700;
             letter-spacing: 0.22em;
-            color: #282828;
+            color: var(--text3);
             text-transform: uppercase;
             width: 340px;
         }
-
+        .game-title .accent { color: var(--p1); }
+        .version-tag {
+            display: block;
+            font-size: 0.6rem;
+            color: var(--text3);
+            opacity: 0.55;
+            letter-spacing: 0.18em;
+            margin-top: 4px;
+            font-weight: 500;
+        }
         .timer-wrap { text-align: center; }
-
         .timer-value {
-            font-size: 5.2rem;
+            font-size: 5.4rem;
             font-weight: 900;
             font-variant-numeric: tabular-nums;
             line-height: 1;
-            letter-spacing: 0.04em;
-            color: #e8e8e8;
+            letter-spacing: 0.02em;
+            font-style: italic;
+            color: var(--text);
             transition: color 0.4s;
         }
-
-        .timer-value.idle    { color: #222; }
-        .timer-value.warning { color: #f48771; animation: timerPulse 1s ease-in-out infinite; }
-
+        .timer-value.idle    { color: var(--text3); }
+        .timer-value.warning { color: var(--warning); animation: timerPulse 1s ease-in-out infinite; }
+        .timer-value.danger  { color: var(--danger);  animation: timerPulse 0.6s ease-in-out infinite; }
         @keyframes timerPulse {
             0%, 100% { opacity: 1; }
             50%       { opacity: 0.5; }
         }
-
         .game-status {
             font-size: 0.62rem;
             text-transform: uppercase;
             letter-spacing: 0.24em;
-            color: #252525;
+            color: var(--text3);
             margin-top: 5px;
         }
-        .game-status.playing  { color: #4ec9b0; }
-        .game-status.finished { color: #f48771; }
+        .game-status.playing      { color: var(--playing); }
+        .game-status.finished     { color: var(--danger); }
+        .game-status.suddendeath  { color: var(--warning); animation: timerPulse 0.9s ease-in-out infinite; }
 
         .topbar-right {
             text-align: right;
             font-size: 0.88rem;
-            color: #2e2e2e;
+            color: var(--text3);
             width: 340px;
             letter-spacing: 0.06em;
+            line-height: 1.4;
         }
+        .topbar-right .mode-pill {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            background: var(--bg3);
+            border: 1px solid var(--border);
+            color: var(--text2);
+            font-size: 0.7rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        .fb-indicator {
+            display: inline-block;
+            font-size: 0.6rem;
+            margin-top: 4px;
+            letter-spacing: 0.1em;
+            color: var(--text3);
+        }
+        .fb-indicator .dot {
+            display: inline-block;
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            margin-right: 5px;
+            background: var(--text3);
+            vertical-align: middle;
+        }
+        .fb-indicator.online .dot { background: var(--playing); box-shadow: 0 0 6px var(--playing); }
+        .fb-indicator.offline .dot { background: var(--text3); }
 
-        /* ─── PLAYERS AREA ─── */
         .players-area {
             display: grid;
             gap: 14px;
             padding: 14px;
-            height: 970px;
+            height: 960px;
+            position: relative;
+            z-index: 1;
         }
-
-        /* Grid layouts */
         .players-area[data-count="1"] { grid-template-columns: 1fr; grid-template-rows: 1fr; }
         .players-area[data-count="2"] { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; }
         .players-area[data-count="3"] { grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr; }
         .players-area[data-count="4"] { grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; }
-        /* 5 players: 3 in row 1, 2 centered in row 2 (6-col grid) */
         .players-area[data-count="5"] { grid-template-columns: repeat(6, 1fr); grid-template-rows: 1fr 1fr; }
         .players-area[data-count="5"] .player-card:nth-child(1) { grid-column: 1 / 3; grid-row: 1; }
         .players-area[data-count="5"] .player-card:nth-child(2) { grid-column: 3 / 5; grid-row: 1; }
@@ -105,72 +168,93 @@
         .players-area[data-count="5"] .player-card:nth-child(5) { grid-column: 4 / 6; grid-row: 2; }
         .players-area[data-count="6"] { grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; }
 
-        /* ─── PLAYER CARD ─── */
         .player-card {
-            background: #0f0f0f;
-            border-radius: 16px;
+            background: var(--bg2);
+            background-image: repeating-linear-gradient(-25deg, transparent 0 30px, rgba(255,255,255,0.018) 30px 60px);
+            border-radius: var(--radius);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
             overflow: hidden;
-            border: 2px solid #161616;
+            border: 2px solid var(--border);
             transition: border-color 0.4s, box-shadow 0.4s, background 0.4s;
         }
-
         .player-card.hidden { display: none; }
-
-        /* Colored top bar */
         .player-card::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0;
-            height: 8px;
+            height: 10px;
             background: var(--player-color);
+            box-shadow: 0 0 20px color-mix(in srgb, var(--player-color) 70%, transparent);
         }
-
-        /* Score flash on point */
-        .player-card.score-flash { animation: scoreFlash 0.38s ease-out; }
-
+        .player-card::after {
+            content: '';
+            position: absolute;
+            top: 10px; left: 0; right: 0;
+            height: 6px;
+            background: repeating-linear-gradient(90deg,
+                color-mix(in srgb, var(--player-color) 80%, transparent) 0 12px,
+                transparent 12px 24px);
+            opacity: 0.55;
+        }
+        .player-card.score-flash { animation: scoreFlash 0.4s ease-out; }
         @keyframes scoreFlash {
-            0%   { background: color-mix(in srgb, var(--player-color) 16%, #0f0f0f); }
-            100% { background: #0f0f0f; }
+            0%   { background-color: color-mix(in srgb, var(--player-color) 22%, var(--bg2)); }
+            100% { background-color: var(--bg2); }
         }
-
-        /* Winner highlight */
+        .player-card.undo-flash { animation: undoFlash 0.5s ease-out; }
+        @keyframes undoFlash {
+            0%   { background-color: color-mix(in srgb, var(--danger) 22%, var(--bg2)); }
+            100% { background-color: var(--bg2); }
+        }
         .player-card.winner {
             border-color: var(--player-color);
-            box-shadow: 0 0 50px color-mix(in srgb, var(--player-color) 30%, transparent),
-                        inset 0 0 40px color-mix(in srgb, var(--player-color) 8%, transparent);
+            box-shadow: 0 0 60px color-mix(in srgb, var(--player-color) 35%, transparent),
+                        inset 0 0 50px color-mix(in srgb, var(--player-color) 10%, transparent);
+        }
+        .player-card.leading {
+            border-color: color-mix(in srgb, var(--player-color) 50%, var(--border));
+        }
+        .player-card.suddendeath-frame {
+            border-color: var(--warning);
+            box-shadow: inset 0 0 30px color-mix(in srgb, var(--warning) 8%, transparent);
+            animation: sdFrame 1.4s ease-in-out infinite;
+        }
+        @keyframes sdFrame {
+            0%, 100% { box-shadow: inset 0 0 30px color-mix(in srgb, var(--warning) 8%, transparent); }
+            50%       { box-shadow: inset 0 0 60px color-mix(in srgb, var(--warning) 22%, transparent); }
         }
 
         .winner-badge {
             display: none;
             position: absolute;
-            top: 20px;
-            right: 22px;
+            top: 26px; right: 22px;
             font-size: 0.78rem;
             font-weight: 700;
             letter-spacing: 0.14em;
             color: var(--player-color);
             text-transform: uppercase;
         }
+        .winner-badge::before { content: '🏁 '; }
         .player-card.winner .winner-badge { display: block; }
 
-        /* Card content */
         .player-num {
             font-size: 0.78rem;
             text-transform: uppercase;
             letter-spacing: 0.24em;
             color: var(--player-color);
-            opacity: 0.55;
+            opacity: 0.65;
             margin-bottom: 10px;
+            margin-top: 16px;
+            font-style: italic;
+            font-weight: 800;
         }
-
         .player-name {
             font-weight: 600;
-            color: #bbb;
+            color: var(--text2);
             margin-bottom: 14px;
             max-width: 88%;
             text-align: center;
@@ -178,24 +262,37 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-
         .player-score {
             font-weight: 900;
             color: var(--player-color);
             font-variant-numeric: tabular-nums;
             line-height: 1;
+            font-style: italic;
             text-shadow: 0 0 80px color-mix(in srgb, var(--player-color) 55%, transparent);
+            letter-spacing: -0.02em;
         }
 
-        /* "+1" pop animation */
         .score-pop {
             position: absolute;
             font-size: 3.2rem;
             font-weight: 900;
-            color: #fff;
+            font-style: italic;
             animation: popUp 0.9s ease-out forwards;
             pointer-events: none;
             z-index: 20;
+        }
+        .score-pop.plus  { color: var(--text); }
+        .score-pop.minus { color: var(--danger); }
+        .score-pop.plus::after {
+            content: '';
+            position: absolute;
+            left: 100%; top: 50%;
+            margin-left: 8px;
+            width: 80px; height: 6px;
+            background: linear-gradient(90deg, currentColor, transparent);
+            transform: translateY(-50%);
+            border-radius: 3px;
+            opacity: 0.7;
         }
         @keyframes popUp {
             0%   { opacity: 1; transform: translateY(0) scale(1.3); }
@@ -203,14 +300,12 @@
             100% { opacity: 0; transform: translateY(-90px) scale(0.8); }
         }
 
-        /* ── Font sizes per layout ── */
         [data-count="1"] .player-score { font-size: 22rem; }
         [data-count="2"] .player-score { font-size: 18rem; }
         [data-count="3"] .player-score { font-size: 14rem; }
         [data-count="4"] .player-score { font-size: 9rem;  }
         [data-count="5"] .player-score,
         [data-count="6"] .player-score { font-size: 8rem;  }
-
         [data-count="1"] .player-name { font-size: 3.4rem; }
         [data-count="2"] .player-name { font-size: 2.8rem; }
         [data-count="3"] .player-name { font-size: 2.4rem; }
@@ -218,63 +313,183 @@
         [data-count="5"] .player-name,
         [data-count="6"] .player-name { font-size: 1.8rem; }
 
-        /* ─── IDLE OVERLAY ─── */
         #idleOverlay {
             position: fixed;
-            top: 110px; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.78);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            pointer-events: none;
+            top: 120px; left: 0; right: 0; bottom: 0;
+            background: rgba(13, 13, 15, 0.82);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
             transition: opacity 0.7s;
             z-index: 100;
         }
         #idleOverlay.visible { opacity: 1; pointer-events: auto; }
-
         .idle-text {
-            font-size: 1.8rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.22em;
-            color: #222;
+            font-size: 1.8rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.22em;
+            color: var(--text3);
         }
 
-        /* ─── FINISHED BANNER ─── */
         #finishedBanner {
             position: fixed;
             top: 0; left: 0; right: 0;
-            height: 110px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            height: 120px;
+            display: flex; align-items: center; justify-content: center;
             pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.6s;
+            opacity: 0; transition: opacity 0.6s;
             z-index: 200;
+            background: repeating-linear-gradient(90deg,
+                rgba(244, 135, 113, 0.06) 0 30px,
+                rgba(244, 135, 113, 0.18) 30px 60px);
         }
         #finishedBanner.visible { opacity: 1; }
-
         .finished-text {
-            font-size: 1.6rem;
+            font-size: 1.6rem; font-weight: 900;
+            text-transform: uppercase; letter-spacing: 0.32em;
+            color: var(--danger);
+            font-style: italic;
+        }
+
+        #flashOverlay {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
+            background: rgba(13, 13, 15, 0.92);
+            padding: 80px;
+        }
+        #flashOverlay.visible {
+            display: flex;
+            animation: flashBlink 0.7s ease-in-out infinite;
+        }
+        @keyframes flashBlink {
+            0%, 100% { background: rgba(13, 13, 15, 0.88); }
+            50%       { background: rgba(255, 107, 53, 0.32); }
+        }
+        .flash-text {
+            font-size: 7rem;
             font-weight: 900;
+            color: var(--p1);
+            text-align: center;
             text-transform: uppercase;
-            letter-spacing: 0.32em;
-            color: #f48771;
+            letter-spacing: 0.06em;
+            font-style: italic;
+            text-shadow: 0 0 80px var(--p1), 0 0 40px var(--p1), 0 4px 0 #000;
+            max-width: 92%;
+            line-height: 1.1;
+            animation: flashTextScale 0.7s ease-in-out infinite;
+        }
+        @keyframes flashTextScale {
+            0%, 100% { transform: scale(1); }
+            50%       { transform: scale(1.05); }
+        }
+
+        /* ─── QR OVERLAY ───────────────────────────────────────────────────── */
+        #qrOverlay {
+            position: fixed;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 400;
+            background: rgba(13, 13, 15, 0.97);
+            padding: 40px;
+        }
+        #qrOverlay.visible { display: flex; }
+
+        .qr-title {
+            font-size: 2.6rem;
+            font-weight: 900;
+            font-style: italic;
+            color: var(--text);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .qr-title .accent { color: var(--p1); }
+        .qr-subtitle {
+            font-size: 1rem;
+            color: var(--text2);
+            margin-bottom: 36px;
+            letter-spacing: 0.05em;
+            text-align: center;
+        }
+        .qr-subtitle .url {
+            font-family: ui-monospace, monospace;
+            color: var(--p1);
+            font-weight: 700;
+        }
+        .qr-grid {
+            display: grid;
+            gap: 22px;
+            max-width: 1820px;
+        }
+        .qr-grid[data-count="1"] { grid-template-columns: 1fr; max-width: 600px; }
+        .qr-grid[data-count="2"] { grid-template-columns: 1fr 1fr; max-width: 1100px; }
+        .qr-grid[data-count="3"] { grid-template-columns: 1fr 1fr 1fr; }
+        .qr-grid[data-count="4"] { grid-template-columns: 1fr 1fr 1fr 1fr; }
+        .qr-grid[data-count="5"] { grid-template-columns: repeat(5, 1fr); }
+        .qr-grid[data-count="6"] { grid-template-columns: repeat(6, 1fr); }
+
+        .qr-card {
+            background: var(--bg2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px;
+            text-align: center;
+            border-top: 6px solid var(--player-color);
+        }
+        .qr-card img {
+            width: 100%;
+            max-width: 260px;
+            height: auto;
+            display: block;
+            margin: 0 auto 12px;
+            border-radius: 8px;
+            background: var(--bg);
+        }
+        .qr-card-name {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--player-color);
+            font-style: italic;
+            margin-bottom: 4px;
+        }
+        .qr-card-id {
+            font-size: 0.7rem;
+            color: var(--text3);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+        .qr-hint {
+            margin-top: 30px;
+            font-size: 0.78rem;
+            color: var(--text3);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            text-align: center;
         }
     </style>
 </head>
 <body>
 
     <div class="topbar">
-        <div class="game-title">Pandora 2026</div>
+        <div class="game-title">
+            Pandora <span class="accent">2026</span>
+            <span class="version-tag">v1.5.0</span>
+        </div>
         <div class="timer-wrap">
             <div class="timer-value idle" id="timerValue">--:--</div>
             <div class="game-status" id="gameStatus">En attente</div>
         </div>
-        <div class="topbar-right" id="topbarRight"></div>
+        <div class="topbar-right" id="topbarRight">
+            <span class="mode-pill" id="modePill">Timer</span>
+            <div class="fb-indicator offline" id="fbIndicator"><span class="dot"></span>Firebase OFF</div>
+        </div>
     </div>
+    <div class="checkered-bar"></div>
 
     <div class="players-area" id="playersArea" data-count="4"></div>
 
@@ -283,29 +498,160 @@
     </div>
 
     <div id="finishedBanner">
-        <div class="finished-text">Partie terminée</div>
+        <div class="finished-text">🏁  Partie terminée  🏁</div>
+    </div>
+
+    <div id="flashOverlay">
+        <div class="flash-text" id="flashText"></div>
+    </div>
+
+    <div id="qrOverlay">
+        <div class="qr-title">🏁 Scannez votre <span class="accent">QR</span> 🏁</div>
+        <div class="qr-subtitle">
+            Ouvrez l'appareil photo de votre téléphone — page joueur sur <span class="url" id="qrBaseUrl">pandora-player</span>
+        </div>
+        <div class="qr-grid" id="qrGrid"></div>
+        <div class="qr-hint">📱 Chaque joueur scanne SON QR  ·  Appuyez à nouveau sur « QR codes » dans la télécommande pour fermer</div>
     </div>
 
     <script>
+        const VERSION = 'v1.5.0';
         const { ipcRenderer } = require('electron');
 
-        const PLAYER_COLORS  = ['#e63946', '#ffc300', '#7ed321', '#00c8e0', '#4361ee', '#e040fb'];
-        const DEFAULT_NAMES  = ['Joueur 1', 'Joueur 2', 'Joueur 3', 'Joueur 4', 'Joueur 5', 'Joueur 6'];
+        const PLAYER_COLORS = ['#ff6b35', '#fbbf24', '#4ade80', '#00e5ff', '#c084fc', '#f43f5e'];
+        const DEFAULT_NAMES = ['Joueur 1', 'Joueur 2', 'Joueur 3', 'Joueur 4', 'Joueur 5', 'Joueur 6'];
+
+        // ─── LED RGB helpers ─────────────────────────────────────────────────
+        function hexToRgb(hex) {
+            const h = (hex || '').replace('#', '');
+            const r = parseInt(h.slice(0, 2), 16) || 0;
+            const g = parseInt(h.slice(2, 4), 16) || 0;
+            const b = parseInt(h.slice(4, 6), 16) || 0;
+            return { r, g, b };
+        }
+        const PLAYER_RGB = PLAYER_COLORS.map(hexToRgb);
+
+        function sendLedColor(player, r, g, b) {
+            ipcRenderer.send('osc-out', {
+                address: '/setColor',
+                args: [Math.floor(player), Math.floor(r), Math.floor(g), Math.floor(b)]
+            });
+        }
+        function sendNativeLedColors() {
+            for (let i = 1; i <= 6; i++) {
+                if (i <= game.players) {
+                    const { r, g, b } = PLAYER_RGB[i - 1];
+                    sendLedColor(i, r, g, b);
+                } else {
+                    sendLedColor(i, 0, 0, 0);
+                }
+            }
+        }
+        function clearAllLeds() {
+            for (let i = 1; i <= 6; i++) sendLedColor(i, 0, 0, 0);
+        }
 
         const game = {
-            players:   4,
-            duration:  0,
-            names:     [...DEFAULT_NAMES],
-            scores:    [0, 0, 0, 0, 0, 0],
-            state:     'idle',   // idle | playing | finished
-            remaining: 0
+            mode:        'timer',
+            players:     4,
+            duration:    0,
+            target:      10,
+            names:       [...DEFAULT_NAMES],
+            scores:      [0, 0, 0, 0, 0, 0],
+            state:       'idle',
+            remaining:   0,
+            total:       0,
+            currentLeader: 0,
+            flash:       null   // { text, until }
         };
 
         let timerInterval = null;
         const playersArea = document.getElementById('playersArea');
 
-        // ─── Build DOM ───────────────────────────────────────────────────────────────
+        // ─── Fullscreen sur touche F ─────────────────────────────────────────
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'f' || e.key === 'F') {
+                if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+                else document.exitFullscreen().catch(() => {});
+            } else if (e.key === 'Escape' && document.fullscreenElement) {
+                document.exitFullscreen().catch(() => {});
+            }
+        });
 
+        // ─── Firebase status indicator polling ───────────────────────────────
+        setInterval(async () => {
+            try {
+                const status = await ipcRenderer.invoke('get-firebase-status');
+                const el = document.getElementById('fbIndicator');
+                if (status.online) {
+                    el.className = 'fb-indicator online';
+                    el.innerHTML = '<span class="dot"></span>Firebase ON';
+                } else {
+                    el.className = 'fb-indicator offline';
+                    el.innerHTML = '<span class="dot"></span>Firebase OFF';
+                }
+            } catch {}
+        }, 3000);
+
+        // ─── AUDIO ───────────────────────────────────────────────────────────
+        let audioCtx = null;
+        function ensureAudio() {
+            if (!audioCtx) {
+                try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+                catch (e) { console.warn('AudioContext non disponible'); }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        }
+        ensureAudio();
+
+        function tone(freq, dur, { type = 'sine', vol = 0.18, attack = 0.005, release = 0.08, slideTo = null } = {}) {
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, now);
+            if (slideTo) osc.frequency.exponentialRampToValueAtTime(slideTo, now + dur);
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(vol, now + attack);
+            gain.gain.linearRampToValueAtTime(0.0001, now + dur);
+            osc.connect(gain).connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + dur + release);
+        }
+        function playTick(idx)      { const base = 540 + idx * 90; tone(base, 0.10, { type: 'triangle', vol: 0.20 }); tone(base * 2, 0.06, { type: 'sine',  vol: 0.10 }); }
+        function playUndo(idx)      { tone(280 - idx * 10, 0.18, { type: 'sawtooth', vol: 0.18, slideTo: (280 - idx * 10) * 0.6 }); }
+        function playStart()        { tone(220, 0.30, { type: 'sawtooth', vol: 0.20, slideTo: 660 }); setTimeout(() => tone(880, 0.12, { type: 'square', vol: 0.16 }), 280); }
+        function playStop()         { tone(330, 0.18, { type: 'sawtooth', vol: 0.18, slideTo: 110 }); }
+        function playEnd()          { tone(110, 1.2, { type: 'sine', vol: 0.22, release: 0.5 }); tone(220, 1.2, { type: 'triangle', vol: 0.14, release: 0.5 }); tone(330, 1.2, { type: 'sine', vol: 0.08, release: 0.5 }); }
+        function playWarning()      { tone(880, 0.10, { type: 'square', vol: 0.18 }); setTimeout(() => tone(660, 0.10, { type: 'square', vol: 0.16 }), 130); }
+        function playCountdown(s)   { tone(s <= 3 ? 1320 : 880, 0.08, { type: 'square', vol: 0.20 }); }
+        function playSuddenDeath()  { tone(440, 0.25, { type: 'sawtooth', vol: 0.22, slideTo: 220 }); setTimeout(() => tone(660, 0.18, { type: 'square', vol: 0.18, slideTo: 330 }), 220); }
+        function playFlashAlert()   { tone(1320, 0.12, { type: 'square', vol: 0.22 }); setTimeout(() => tone(990, 0.12, { type: 'square', vol: 0.20 }), 160); setTimeout(() => tone(1320, 0.12, { type: 'square', vol: 0.22 }), 320); }
+
+        // ─── OSC OUT helpers (TIMER OSC REMOVED) ─────────────────────────────
+        function oscOut(address, ...args) { ipcRenderer.send('osc-out', { address, args }); }
+        function oscOutScalar(address, value) { ipcRenderer.send('osc-out', { address, args: [value] }); }
+
+        // ─── Firebase push ───────────────────────────────────────────────────
+        function pushFirebase() {
+            const payload = {
+                state:    game.state,
+                mode:     game.mode,
+                players:  game.players,
+                duration: game.duration,
+                target:   game.target,
+                total:    game.total,
+                remaining: game.remaining,
+                names:    game.names.slice(0, 6),
+                scores:   game.scores.slice(0, 6),
+                flash:    game.flash || null,
+                updatedAt: Date.now()
+            };
+            ipcRenderer.send('firebase-push', payload);
+        }
+
+        // ─── DOM build ───────────────────────────────────────────────────────
         function buildCards() {
             playersArea.innerHTML = '';
             for (let i = 0; i < 6; i++) {
@@ -329,10 +675,18 @@
             for (let i = 1; i <= 6; i++) {
                 document.getElementById(`card-${i}`).classList.toggle('hidden', i > game.players);
             }
-            const p = game.players;
-            document.getElementById('topbarRight').textContent = p
-                ? `${p} joueur${p > 1 ? 's' : ''}${game.duration ? '  ·  ' + game.duration + ' min' : ''}`
-                : '';
+            updateTopbarRight();
+        }
+
+        function updateTopbarRight() {
+            const modeLabel = { timer: 'Timer', race: 'Course', suddendeath: 'Mort subite' }[game.mode] || 'Timer';
+            const targetInfo = game.mode === 'race' ? `${game.target} pts` : `${game.duration} min`;
+            const playersInfo = game.players ? `${game.players} J` : '—';
+            document.getElementById('topbarRight').innerHTML = `
+                <span class="mode-pill">${modeLabel}</span>
+                <div style="margin-top:6px">${playersInfo} · ${targetInfo}</div>
+                <div class="fb-indicator offline" id="fbIndicator"><span class="dot"></span>Firebase OFF</div>
+            `;
         }
 
         function refreshNames() {
@@ -340,65 +694,173 @@
                 document.getElementById(`name-${i}`).textContent = game.names[i - 1];
             }
         }
-
-        function refreshScore(idx) {
-            document.getElementById(`score-${idx + 1}`).textContent = game.scores[idx];
-        }
-
+        function refreshScore(idx) { document.getElementById(`score-${idx + 1}`).textContent = game.scores[idx]; }
         function resetScoreDisplay() {
             for (let i = 0; i < 6; i++) {
                 document.getElementById(`score-${i + 1}`).textContent = '0';
+                document.getElementById(`card-${i + 1}`).classList.remove('leading', 'winner', 'suddendeath-frame');
             }
         }
 
-        // ─── Animations ──────────────────────────────────────────────────────────────
-
-        function triggerScoreAnim(idx) {
+        function triggerScoreAnim(idx, sign = '+1') {
             const card = document.getElementById(`card-${idx + 1}`);
             if (!card) return;
-
-            card.classList.remove('score-flash');
+            const flashClass = sign === '+1' ? 'score-flash' : 'undo-flash';
+            card.classList.remove(flashClass);
             void card.offsetWidth;
-            card.classList.add('score-flash');
-
+            card.classList.add(flashClass);
             const pop = document.createElement('div');
-            pop.className = 'score-pop';
-            pop.textContent = '+1';
-            pop.style.color = PLAYER_COLORS[idx];
+            pop.className = 'score-pop ' + (sign === '+1' ? 'plus' : 'minus');
+            pop.textContent = sign;
+            if (sign === '+1') pop.style.color = PLAYER_COLORS[idx];
             card.appendChild(pop);
             setTimeout(() => pop.remove(), 950);
         }
 
-        // ─── Timer ───────────────────────────────────────────────────────────────────
+        function updateLeading() {
+            const active = game.scores.slice(0, game.players);
+            const maxScore = Math.max(...active);
+            document.querySelectorAll('.player-card').forEach(c => c.classList.remove('leading'));
+            if (maxScore === 0) {
+                if (game.currentLeader !== 0) { game.currentLeader = 0; oscOutScalar('/pandora/leader', 0); }
+                return;
+            }
+            const leaders = active.map((s, i) => s === maxScore ? i + 1 : null).filter(Boolean);
+            if (game.state === 'playing' || game.state === 'suddendeath') {
+                leaders.forEach(p => document.getElementById(`card-${p}`).classList.add('leading'));
+            }
+            const leaderId = leaders.length === 1 ? leaders[0] : 0;
+            if (leaderId !== game.currentLeader) {
+                game.currentLeader = leaderId;
+                oscOutScalar('/pandora/leader', leaderId);
+            }
+        }
 
+        function highlightWinner() {
+            const active = game.scores.slice(0, game.players);
+            const maxScore = Math.max(...active);
+            document.querySelectorAll('.player-card').forEach(c => c.classList.remove('winner'));
+            if (maxScore <= 0) return;
+            const winners = [];
+            active.forEach((score, i) => {
+                if (score === maxScore) {
+                    document.getElementById(`card-${i + 1}`).classList.add('winner');
+                    winners.push(i + 1);
+                }
+            });
+            winners.forEach(p => oscOut(`/pandora/winner/${p}`));
+            oscOutScalar('/pandora/winner/count', winners.length);
+        }
+
+        function setSuddenDeathFrame(on) {
+            document.querySelectorAll('.player-card').forEach((c, i) => {
+                if (i < game.players) c.classList.toggle('suddendeath-frame', on);
+                else c.classList.remove('suddendeath-frame');
+            });
+        }
+
+        // ─── Flash message ───────────────────────────────────────────────────
+        let flashTimer = null;
+        function showFlashMessage(text, durationMs = 5000) {
+            if (!text) return;
+            const overlay = document.getElementById('flashOverlay');
+            const textEl  = document.getElementById('flashText');
+            textEl.textContent = text;
+            overlay.classList.add('visible');
+            playFlashAlert();
+            oscOutScalar('/pandora/message', text);
+            game.flash = { text, until: Date.now() + durationMs };
+            pushFirebase();
+            if (flashTimer) clearTimeout(flashTimer);
+            flashTimer = setTimeout(() => {
+                overlay.classList.remove('visible');
+                oscOut('/pandora/message/clear');
+                game.flash = null;
+                pushFirebase();
+                flashTimer = null;
+            }, durationMs);
+        }
+
+        // ─── QR overlay ──────────────────────────────────────────────────────
+        let qrVisible = false;
+        async function showQrCodes() {
+            try {
+                const result = await ipcRenderer.invoke('get-qr-codes', game.players || 6);
+                const grid = document.getElementById('qrGrid');
+                grid.innerHTML = '';
+                grid.dataset.count = game.players;
+                const baseUrlEl = document.getElementById('qrBaseUrl');
+                baseUrlEl.textContent = result.baseUrl;
+                result.codes.slice(0, game.players).forEach((c, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'qr-card';
+                    card.style.setProperty('--player-color', PLAYER_COLORS[idx]);
+                    card.innerHTML = `
+                        <img src="${c.dataUrl}" alt="QR Joueur ${c.player}" />
+                        <div class="qr-card-name">${escapeHtml(game.names[idx] || ('Joueur ' + c.player))}</div>
+                        <div class="qr-card-id">Joueur ${c.player}</div>
+                    `;
+                    grid.appendChild(card);
+                });
+                document.getElementById('qrOverlay').classList.add('visible');
+                qrVisible = true;
+            } catch (e) {
+                console.error('QR generation failed:', e);
+            }
+        }
+        function hideQrCodes() {
+            document.getElementById('qrOverlay').classList.remove('visible');
+            qrVisible = false;
+        }
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]));
+        }
+
+        // ─── Timer ───────────────────────────────────────────────────────────
         function setTimerDisplay(seconds) {
             const el = document.getElementById('timerValue');
             if (seconds < 0) seconds = 0;
+            if (game.mode === 'race' && game.state === 'playing') {
+                const active = game.scores.slice(0, game.players);
+                const max = Math.max(...active);
+                el.textContent = `${max} / ${game.target}`;
+                el.className = 'timer-value';
+                if (game.target - max <= 1) el.classList.add('warning');
+                return;
+            }
             const m = Math.floor(seconds / 60).toString().padStart(2, '0');
             const s = (seconds % 60).toString().padStart(2, '0');
             el.textContent = `${m}:${s}`;
             el.className = 'timer-value';
-            if (game.state === 'idle')                       el.classList.add('idle');
-            else if (game.state === 'playing' && seconds <= 60) el.classList.add('warning');
+            if (game.state === 'idle') el.classList.add('idle');
+            else if (game.state === 'playing') {
+                if (seconds <= 10)      el.classList.add('danger');
+                else if (seconds <= 60) el.classList.add('warning');
+            } else if (game.state === 'suddendeath') {
+                el.classList.add('warning');
+                el.textContent = '∞';
+            }
         }
 
         function startTimer() {
             stopTimer();
             timerInterval = setInterval(() => {
                 game.remaining--;
+                if (game.remaining === 60 || game.remaining === 30) playWarning();
+                if (game.remaining > 0 && game.remaining <= 10) playCountdown(game.remaining);
+
                 if (game.remaining <= 0) {
                     game.remaining = 0;
                     setTimerDisplay(0);
                     stopTimer();
-                    applyState('finished');
-                    ipcRenderer.send('send-game-state', { state: 'finished', remaining: 0 });
-                    broadcastScores();
-                } else {
-                    setTimerDisplay(game.remaining);
-                    if (game.remaining % 5 === 0) {
-                        ipcRenderer.send('send-game-state', { state: 'playing', remaining: game.remaining });
-                    }
+                    if (game.mode === 'suddendeath' && hasTie()) enterSuddenDeath();
+                    else finishGame();
+                    return;
                 }
+                setTimerDisplay(game.remaining);
+                // Push every second to remote, every 2s to Firebase (lighter)
+                ipcRenderer.send('send-game-state', { state: 'playing', remaining: game.remaining, total: game.total });
+                if (game.remaining % 2 === 0) pushFirebase();
             }, 1000);
         }
 
@@ -406,36 +868,68 @@
             if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
         }
 
-        // ─── Game state ──────────────────────────────────────────────────────────────
+        function hasTie() {
+            const active = game.scores.slice(0, game.players);
+            const max = Math.max(...active);
+            return active.filter(s => s === max).length > 1 && max > 0;
+        }
 
+        // ─── State transitions ───────────────────────────────────────────────
         function applyState(newState, remaining) {
+            const prevState = game.state;
             game.state = newState;
 
-            const statusEl        = document.getElementById('gameStatus');
-            const idleOverlay     = document.getElementById('idleOverlay');
-            const finishedBanner  = document.getElementById('finishedBanner');
+            const statusEl       = document.getElementById('gameStatus');
+            const idleOverlay    = document.getElementById('idleOverlay');
+            const finishedBanner = document.getElementById('finishedBanner');
 
             document.querySelectorAll('.player-card').forEach(c => c.classList.remove('winner'));
             finishedBanner.classList.remove('visible');
+            if (newState !== 'suddendeath') setSuddenDeathFrame(false);
 
             if (newState === 'playing') {
                 statusEl.textContent = 'En cours';
                 statusEl.className   = 'game-status playing';
                 idleOverlay.classList.remove('visible');
                 if (remaining !== undefined) game.remaining = remaining;
-                setTimerDisplay(game.remaining);
-                startTimer();
+                if (game.mode !== 'race') {
+                    game.total = game.duration * 60;
+                    setTimerDisplay(game.remaining);
+                    startTimer();
+                } else {
+                    game.total = 0;
+                    setTimerDisplay(0);
+                }
+                if (prevState !== 'playing') { playStart(); oscOut('/pandora/game/started'); }
+                oscOutScalar('/pandora/state', 'playing');
 
             } else if (newState === 'idle' || newState === 'stopped') {
-                statusEl.textContent = 'En attente';
+                statusEl.textContent = newState === 'stopped' ? 'Arrêté' : 'En attente';
                 statusEl.className   = 'game-status';
                 idleOverlay.classList.add('visible');
                 stopTimer();
-                if (game.duration > 0) setTimerDisplay(game.duration * 60);
+                if (game.mode === 'race') {
+                    document.getElementById('timerValue').textContent = `0 / ${game.target}`;
+                    document.getElementById('timerValue').className   = 'timer-value idle';
+                } else if (game.duration > 0) setTimerDisplay(game.duration * 60);
                 else {
                     document.getElementById('timerValue').textContent = '--:--';
                     document.getElementById('timerValue').className   = 'timer-value idle';
                 }
+                if (prevState === 'playing' || prevState === 'suddendeath') {
+                    playStop();
+                    if (newState === 'stopped') oscOut('/pandora/game/stopped');
+                }
+                oscOutScalar('/pandora/state', newState);
+
+            } else if (newState === 'suddendeath') {
+                statusEl.textContent = 'Mort subite';
+                statusEl.className   = 'game-status suddendeath';
+                setTimerDisplay(0);
+                setSuddenDeathFrame(true);
+                playSuddenDeath();
+                oscOut('/pandora/suddendeath/enter');
+                oscOutScalar('/pandora/state', 'suddendeath');
 
             } else if (newState === 'finished') {
                 statusEl.textContent = 'Terminé';
@@ -443,53 +937,135 @@
                 idleOverlay.classList.remove('visible');
                 finishedBanner.classList.add('visible');
                 stopTimer();
-                setTimerDisplay(0);
-
-                const active   = game.scores.slice(0, game.players);
-                const maxScore = Math.max(...active);
-                if (maxScore > 0) {
-                    active.forEach((score, i) => {
-                        if (score === maxScore) document.getElementById(`card-${i + 1}`).classList.add('winner');
-                    });
-                }
+                if (game.mode !== 'race') setTimerDisplay(0);
+                highlightWinner();
+                if (prevState !== 'finished') { playEnd(); oscOut('/pandora/game/finished'); }
+                oscOutScalar('/pandora/state', 'finished');
             }
+            pushFirebase();
         }
 
-        // ─── Broadcast ───────────────────────────────────────────────────────────────
+        function enterSuddenDeath() {
+            applyState('suddendeath');
+            ipcRenderer.send('send-game-state', { state: 'suddendeath', remaining: 0, total: game.total });
+        }
+        function finishGame() {
+            applyState('finished');
+            ipcRenderer.send('send-game-state', { state: 'finished', remaining: 0, total: game.total });
+            broadcastScores();
+        }
+
+        // ─── Scoring ─────────────────────────────────────────────────────────
+        function addPoint(idx) {
+            if (idx < 0 || idx >= game.players) return;
+            if (game.state !== 'playing' && game.state !== 'suddendeath') return;
+            game.scores[idx]++;
+            refreshScore(idx);
+            triggerScoreAnim(idx, '+1');
+            playTick(idx);
+            broadcastScores();
+            updateLeading();
+            pushFirebase();
+
+            const p = idx + 1;
+            const newScore = game.scores[idx];
+            oscOutScalar(`/pandora/score/${p}/value`, newScore);
+            oscOutScalar(`/pandora/score/${p}/added`, newScore);
+
+            if (game.state === 'suddendeath') { finishGame(); return; }
+            if (game.mode === 'race' && game.scores[idx] >= game.target) { finishGame(); return; }
+            if (game.mode === 'race') setTimerDisplay(0);
+        }
+
+        function undoPoint(idx) {
+            if (idx < 0 || idx >= game.players) return;
+            if (game.scores[idx] <= 0) return;
+            if (game.state === 'finished') return;
+            game.scores[idx]--;
+            refreshScore(idx);
+            triggerScoreAnim(idx, '-1');
+            playUndo(idx);
+            broadcastScores();
+            updateLeading();
+            pushFirebase();
+
+            const p = idx + 1;
+            const newScore = game.scores[idx];
+            oscOutScalar(`/pandora/score/${p}/value`, newScore);
+            oscOutScalar(`/pandora/score/${p}/removed`, newScore);
+
+            if (game.mode === 'race') setTimerDisplay(0);
+        }
+
+        function broadcastConfigOsc() {
+            oscOutScalar('/pandora/mode',     game.mode);
+            oscOutScalar('/pandora/players',  game.players);
+            oscOutScalar('/pandora/duration', game.duration);
+            oscOutScalar('/pandora/target',   game.target);
+        }
 
         function broadcastScores() {
             ipcRenderer.send('send-scores', game.scores.slice(0, game.players).map((score, i) => ({
                 player: i + 1, score
             })));
         }
-
-        function broadcastAll() {
+        function broadcastConfig() {
             ipcRenderer.send('send-config', {
-                players:  game.players,
-                duration: game.duration,
-                names:    game.names
+                mode: game.mode, players: game.players,
+                duration: game.duration, target: game.target, names: game.names
             });
-            ipcRenderer.send('send-game-state', { state: game.state, remaining: game.remaining });
+        }
+        function broadcastAll() {
+            broadcastConfig();
+            ipcRenderer.send('send-game-state', { state: game.state, remaining: game.remaining, total: game.total });
             broadcastScores();
         }
 
-        // ─── IPC handlers ────────────────────────────────────────────────────────────
-
+        // ─── Remote command handler ──────────────────────────────────────────
         ipcRenderer.on('remote-command', (event, data) => {
             switch (data.type) {
+
+                case 'set_mode':
+                    if (['timer', 'race', 'suddendeath'].includes(data.mode)) {
+                        game.mode = data.mode;
+                        updateTopbarRight();
+                        if (game.state !== 'playing' && game.state !== 'suddendeath') applyState('idle');
+                        broadcastConfig();
+                        broadcastConfigOsc();
+                        pushFirebase();
+                    }
+                    break;
 
                 case 'set_players':
                     game.players = data.count;
                     refreshCards();
-                    ipcRenderer.send('send-config', { players: game.players, duration: game.duration, names: game.names });
+                    broadcastConfig();
+                    broadcastConfigOsc();
+                    sendNativeLedColors();
+                    pushFirebase();
                     break;
 
                 case 'set_duration':
                     game.duration  = data.minutes;
                     game.remaining = data.minutes * 60;
                     refreshCards();
-                    if (game.state !== 'playing') setTimerDisplay(game.remaining);
-                    ipcRenderer.send('send-config', { players: game.players, duration: game.duration, names: game.names });
+                    if (game.state !== 'playing' && game.state !== 'suddendeath' && game.mode !== 'race') {
+                        setTimerDisplay(game.remaining);
+                    }
+                    broadcastConfig();
+                    broadcastConfigOsc();
+                    pushFirebase();
+                    break;
+
+                case 'set_target':
+                    game.target = parseInt(data.target) || game.target;
+                    if (game.mode === 'race' && (game.state === 'idle' || game.state === 'stopped')) {
+                        document.getElementById('timerValue').textContent = `0 / ${game.target}`;
+                    }
+                    updateTopbarRight();
+                    broadcastConfig();
+                    broadcastConfigOsc();
+                    pushFirebase();
                     break;
 
                 case 'set_names':
@@ -497,49 +1073,101 @@
                         data.names.forEach((n, i) => { game.names[i] = n || DEFAULT_NAMES[i]; });
                     }
                     refreshNames();
-                    ipcRenderer.send('send-config', { players: game.players, duration: game.duration, names: game.names });
+                    broadcastConfig();
+                    pushFirebase();
                     break;
 
                 case 'start_game':
+                    ensureAudio();
                     game.scores    = [0, 0, 0, 0, 0, 0];
-                    game.remaining = game.duration * 60;
+                    game.remaining = (game.mode === 'race') ? 0 : game.duration * 60;
+                    game.total     = (game.mode === 'race') ? 0 : game.duration * 60;
+                    game.currentLeader = 0;
+                    game.flash = null;
                     resetScoreDisplay();
+                    for (let i = 1; i <= game.players; i++) oscOutScalar(`/pandora/score/${i}/value`, 0);
+                    sendNativeLedColors();
                     applyState('playing', game.remaining);
-                    ipcRenderer.send('send-game-state', { state: 'playing', remaining: game.remaining });
+                    ipcRenderer.send('send-game-state', { state: 'playing', remaining: game.remaining, total: game.total });
+                    broadcastScores();
                     break;
 
                 case 'stop_game':
                     applyState('stopped');
-                    ipcRenderer.send('send-game-state', { state: 'stopped', remaining: game.remaining });
+                    ipcRenderer.send('send-game-state', { state: 'stopped', remaining: game.remaining, total: game.total });
+                    break;
+
+                case 'reset_game':
+                    game.scores = [0, 0, 0, 0, 0, 0];
+                    game.currentLeader = 0;
+                    game.flash = null;
+                    resetScoreDisplay();
+                    for (let i = 1; i <= game.players; i++) oscOutScalar(`/pandora/score/${i}/value`, 0);
+                    oscOut('/pandora/game/reset');
+                    applyState('idle');
+                    broadcastScores();
+                    break;
+
+                case 'undo_point':
+                    undoPoint(parseInt(data.player) - 1);
+                    break;
+
+                case 'flash_message':
+                    showFlashMessage(data.text, data.duration || 5000);
+                    break;
+
+                case 'show_qr_codes':
+                    showQrCodes();
+                    break;
+                case 'hide_qr_codes':
+                    hideQrCodes();
+                    break;
+                case 'toggle_qr_codes':
+                    if (qrVisible) hideQrCodes(); else showQrCodes();
                     break;
 
                 case 'get_scores':
                     broadcastScores();
                     break;
+
+                case 'set_player_color':
+                    sendLedColor(
+                        parseInt(data.player) || 1,
+                        parseInt(data.r) || 0,
+                        parseInt(data.g) || 0,
+                        parseInt(data.b) || 0
+                    );
+                    break;
+
+                case 'reset_leds':
+                    sendNativeLedColors();
+                    break;
+
+                case 'clear_leds':
+                    clearAllLeds();
+                    break;
             }
         });
 
-        // OSC /Touch + player number (1-based)
+        // ─── OSC IN ──────────────────────────────────────────────────────────
         ipcRenderer.on('osc-message', (event, data) => {
             if (data.address === '/Touch' && Array.isArray(data.args) && data.args.length > 0) {
                 const p = parseInt(data.args[0]);
-                if (p >= 1 && p <= game.players && game.state === 'playing') {
-                    game.scores[p - 1]++;
-                    refreshScore(p - 1);
-                    triggerScoreAnim(p - 1);
-                    broadcastScores();
-                }
+                if (p >= 1 && p <= game.players) addPoint(p - 1);
             }
         });
 
-        // Sync state to any freshly connected remote
         ipcRenderer.on('ws-client-event', (event, data) => {
-            if (data.connected) broadcastAll();
+            if (data.connected) { broadcastAll(); broadcastConfigOsc(); }
         });
 
-        // ─── Init ────────────────────────────────────────────────────────────────────
+        // ─── Init ────────────────────────────────────────────────────────────
         buildCards();
         applyState('idle');
+        broadcastConfigOsc();
+        sendNativeLedColors();
+        pushFirebase();
+        console.log(`Pandora 2026 ${VERSION} ready.`);
     </script>
 </body>
 </html>
